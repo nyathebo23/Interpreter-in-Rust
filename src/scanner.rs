@@ -6,7 +6,7 @@ use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
 use crate::scanner::utils::*;
 
-pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
+pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
     let mut token_list: Vec<Token> = Vec::new();
     let code_symbols: Vec<char> = file_text.chars().collect();
     let mut line = 1;
@@ -145,37 +145,63 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
             },
             '\"' => {
                 index += 1;
-                let literal_string = string(&code_symbols, &mut index, &n, &line, &mut has_error);
-                let lexeme_str = format!("\"{literal_string}\"");
-
-                token_list.push(
-                    Token { token_type: TokenType::STRING,
-                        lexeme: Cow::Owned(lexeme_str), literal: Some(literal_string), line }
-                );
+                let result_string = string(&code_symbols, &mut index, &n);
+                match result_string {
+                    Ok(literal_string) => {
+                        let lexeme_str = format!("\"{literal_string}\"");
+                        token_list.push(
+                            Token { token_type: TokenType::STRING,
+                                lexeme: Cow::Owned(lexeme_str), literal: Some(literal_string), line }
+                        );
+                    },
+                    Err(err) => {
+                        *has_error = true;
+                        handle_error(&line, ErrorType::LexicalError, err.as_str());
+                        break;
+                    }
+                }
             },
             _ => {
                 if c.is_ascii_digit() {
                     index += 1;
-                    let num = number(&code_symbols, c, &mut index, &n,  &line, &mut has_error);
-                    let literal_num = literal_number(num.as_str());
-                    token_list.push(
-                        Token { token_type: TokenType::NUMBER,
-                        lexeme: Cow::Owned(num), literal: Some(literal_num), line }, 
-                    );
+                    let result_num = number(&code_symbols, c, &mut index, &n);
+                    match result_num {
+                        Ok(num) => {
+                            let literal_num = literal_number(num.as_str());
+                            token_list.push(
+                                Token { token_type: TokenType::NUMBER,
+                                lexeme: Cow::Owned(num), literal: Some(literal_num), line }, 
+                            );
+                        },
+                        Err(err) => {
+                            *has_error = true;
+                            handle_error(&line, ErrorType::LexicalError, err.as_str());
+                            break;
+                        }
+                    }
                 }
                 else if c.is_ascii_lowercase() || c == '_' {
                     index += 1;
-                    let ident = identifier(&code_symbols, c, &mut index, &n, &line, &mut has_error);
-                    match keywordsmap.get(ident.as_str()) {
-                        Some(token_type) => token_list.push(
-                            Token { token_type: token_type.clone(),
-                            lexeme: Cow::Owned(ident), literal: None, line }
-                        ),
-                        None => token_list.push(
-                            Token { token_type: TokenType::IDENTIFIER, 
-                            lexeme: Cow::Owned(ident), literal: None, line }
-                        ),
-                    } 
+                    let result_ident = identifier(&code_symbols, c, &mut index, &n);
+                    match result_ident {
+                        Ok(ident) => {
+                            match keywordsmap.get(ident.as_str()) {
+                                Some(token_type) => token_list.push(
+                                    Token { token_type: token_type.clone(),
+                                    lexeme: Cow::Owned(ident), literal: None, line }
+                                ),
+                                None => token_list.push(
+                                    Token { token_type: TokenType::IDENTIFIER, 
+                                    lexeme: Cow::Owned(ident), literal: None, line }
+                                ),
+                            } 
+                        },
+                        Err(err) => {
+                            *has_error = true;
+                            handle_error(&line, ErrorType::LexicalError, err.as_str());
+                            break;
+                        }
+                    }
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());

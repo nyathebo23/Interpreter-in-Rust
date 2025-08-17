@@ -1,6 +1,5 @@
-use crate::error_handler::{handle_error, ErrorType};
 
-pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
+pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usize) -> Result<String, String> {
     let mut num = String::from(start_char);
     let mut last_char: char = start_char;
     while *index < *n {
@@ -26,13 +25,12 @@ pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usi
         }
     }
     if last_char.is_ascii_alphabetic() || last_char == '_' {
-        handle_error(line, ErrorType::LexicalError, format!("Unexpected character: {last_char}").as_str());
-        *has_err = true;
+        return Err(format!("Unexpected character: {last_char}"));
     }  
-    num  
+    Ok(num)  
 }
 
-pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
+pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Result<String, String> {
     let mut val= String::from("");
     let mut end_string_found = false;
     while *index < *n {
@@ -47,13 +45,12 @@ pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32, has
         }
     }
     if !end_string_found {
-        handle_error(line, ErrorType::LexicalError, "Unterminated string.");
-        *has_err = true;
+        return Err("Unterminated string.".to_owned());
     }
-    val
+    Ok(val)
 }
 
-pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
+pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &usize) -> Result<String, String> {
     let mut ident = String::from(start_char);
     let mut last_char: char = start_char;
     while *index < *n {
@@ -64,10 +61,9 @@ pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &
         }
     }
     if !(last_char.is_whitespace() || is_identifier_symbol(last_char)) {
-        handle_error(line, ErrorType::LexicalError, format!("Unexpected character: {last_char}").as_str());
-        *has_err = true;
+        return Err(format!("Unexpected character: {last_char}"));
     }
-    ident
+    Ok(ident)
 }
 
 fn is_identifier_symbol(c: char) -> bool {
