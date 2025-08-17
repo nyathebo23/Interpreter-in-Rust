@@ -73,7 +73,7 @@ fn is_identifier_symbol(c: char) -> bool {
 }
 
 pub fn literal_number(num: &str) -> String {
-    let mut number = String::from(num);
+    let mut number = num.parse::<f64>().unwrap().to_string();
     match num.find('.') {
         Some(i) => {
             if i + 1 == num.len() {
