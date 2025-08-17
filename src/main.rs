@@ -28,7 +28,6 @@ fn main() {
             let tokens = tokenize(file_contents);
             display_token(tokens);
             println!("EOF  null"); 
-
         } ,
         "parse" => {
             let file_contents = file_text(filename);
@@ -60,9 +59,5 @@ fn file_text(filename: &String) -> String {
         writeln!(io::stderr(), "Failed to read file {}", filename).unwrap();
         String::new()
     });
-
-    if !file_contents.is_empty() {
-        panic!("Scanner not implemented");
-    }
     file_contents
 }
