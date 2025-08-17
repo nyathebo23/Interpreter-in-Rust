@@ -47,7 +47,7 @@ pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32, has
         }
     }
     if !end_string_found {
-        handle_error(line, ErrorType::LexicalError, "Expected character: \"");
+        handle_error(line, ErrorType::LexicalError, "Unterminated string.");
         *has_err = true;
     }
     val

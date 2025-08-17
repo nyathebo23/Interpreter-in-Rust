@@ -144,6 +144,7 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
                 );
             },
             '\"' => {
+                index += 1;
                 let literal_string = string(&code_symbols, &mut index, &n, &line, &mut has_error);
                 let lexeme_str = format!("\"{literal_string}\"");
 
@@ -154,6 +155,7 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
             },
             _ => {
                 if c.is_ascii_digit() {
+                    index += 1;
                     let num = number(&code_symbols, c, &mut index, &n,  &line, &mut has_error);
                     let literal_num = literal_number(num.as_str());
                     token_list.push(
@@ -162,6 +164,7 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
                     );
                 }
                 else if c.is_ascii_lowercase() || c == '_' {
+                    index += 1;
                     let ident = identifier(&code_symbols, c, &mut index, &n, &line, &mut has_error);
                     match keywordsmap.get(ident.as_str()) {
                         Some(token_type) => token_list.push(
