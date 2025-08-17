@@ -13,6 +13,8 @@ pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usi
         }
     }
     if last_char == '.' {
+        num.push(last_char);
+        *index += 1;
         while *index < *n {
             last_char = symbols[*index];
             if last_char.is_ascii_digit() {
