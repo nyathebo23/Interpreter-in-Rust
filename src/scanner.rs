@@ -1,6 +1,8 @@
 pub mod declarations;
 pub mod utils;
 use std::borrow::Cow;
+use crate::error_handler::handle_error;
+use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
 use crate::scanner::utils::*;
 
@@ -159,6 +161,9 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
                             lexeme: Cow::Owned(ident), literal: None, line }
                         ),
                     } 
+                }
+                else {
+                    handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
                 }
             }
         }
