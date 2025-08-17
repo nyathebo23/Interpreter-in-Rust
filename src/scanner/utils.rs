@@ -74,15 +74,9 @@ fn is_identifier_symbol(c: char) -> bool {
 
 pub fn literal_number(num: &str) -> String {
     let mut number = num.parse::<f64>().unwrap().to_string();
-    match num.find('.') {
-        Some(i) => {
-            if i + 1 == num.len() {
-                number.push('0');
-            }
-        },
-        None => {
-            number.push_str(".0");
-        }
+    if !number.contains('.') {
+        number.push_str(".0");
     }
+    
     number
 }
