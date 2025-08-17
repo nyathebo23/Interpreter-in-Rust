@@ -26,9 +26,9 @@ pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usi
             }
         }
     }
-    if last_char.is_ascii_alphabetic() || last_char == '_' {
-        return Err(format!("Unexpected character: {last_char}"));
-    }  
+    // if last_char.is_ascii_alphabetic() || last_char == '_' {
+    //     return Err(format!("Unexpected character: {last_char}"));
+    // }  
     Ok(num)  
 }
 
