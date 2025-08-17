@@ -179,6 +179,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                             break;
                         }
                     }
+                    continue;
                 }
                 else if c.is_ascii_lowercase() || c == '_' {
                     index += 1;
@@ -202,6 +203,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                             break;
                         }
                     }
+                    continue;
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
