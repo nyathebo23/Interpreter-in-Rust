@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+use std::process;
 
 use crate::parser::expression;
 use crate::scanner::display_token;
@@ -25,13 +26,18 @@ fn main() {
     match command.as_str() {
         "tokenize" => {
             let file_contents = file_text(filename);
-            let tokens = tokenize(file_contents);
+            let mut errors = false;
+            let tokens = tokenize(file_contents, &mut errors);
             display_token(tokens);
             println!("EOF  null"); 
+            if errors {
+                process::exit(65);
+            }
         } ,
         "parse" => {
             let file_contents = file_text(filename);
-            let tokens = tokenize(file_contents);
+            let mut errors = false;
+            let tokens = tokenize(file_contents, &mut errors);
             let mut index: usize = 0;
             let tokens_len = tokens.len();
             let express = expression(&tokens, &mut index, tokens_len);
@@ -39,7 +45,9 @@ fn main() {
         },
         "evaluate" => {
             let file_contents = file_text(filename);
-            let tokens = tokenize(file_contents);
+            let mut errors = false;
+
+            let tokens = tokenize(file_contents, &mut errors);
             let mut index: usize = 0;
             let tokens_len = tokens.len();
             let express = expression(&tokens, &mut index, tokens_len);

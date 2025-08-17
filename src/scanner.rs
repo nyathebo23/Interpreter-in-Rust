@@ -1,20 +1,19 @@
 pub mod declarations;
 pub mod utils;
 use std::borrow::Cow;
-use std::process;
 use crate::error_handler::handle_error;
 use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
 use crate::scanner::utils::*;
 
-pub fn tokenize(file_text: String) -> Vec<Token> {
+pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
     let mut token_list: Vec<Token> = Vec::new();
     let code_symbols: Vec<char> = file_text.chars().collect();
     let mut line = 1;
     let mut index: usize = 0;
     let n = code_symbols.len();
     let keywordsmap = keywords_map();
-    let mut has_error = false;
+
     while index < n {
         let c = code_symbols[index];
 
@@ -166,14 +165,11 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
-                    has_error = true;
+                    *has_error = true;
                 }
             }
         }
         index += 1;
-    }
-    if has_error  {
-        process::exit(65);
     }
 
     token_list
