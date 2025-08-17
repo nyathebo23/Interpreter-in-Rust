@@ -54,9 +54,9 @@ pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Result<Strin
 
 pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &usize) -> Result<String, String> {
     let mut ident = String::from(start_char);
-    let mut last_char: char = start_char;
+    //let mut last_char: char = start_char;
     while *index < *n {
-        last_char = symbols[*index];
+        let last_char = symbols[*index];
         if is_identifier_symbol(last_char) {
             ident.push(last_char);
             *index += 1;
@@ -65,9 +65,9 @@ pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &
             break;
         }
     }
-    if !(last_char.is_whitespace() || is_identifier_symbol(last_char)) {
-        return Err(format!("Unexpected character: {last_char}"));
-    }
+    // if !(last_char.is_whitespace() || is_identifier_symbol(last_char)) {
+    //     return Err(format!("Unexpected character: {last_char}"));
+    // }
     Ok(ident)
 }
 
