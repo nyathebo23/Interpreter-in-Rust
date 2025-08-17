@@ -19,9 +19,12 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
 
         if c == '\n' {
             line += 1;
+            index += 1;
             continue;
         }
         else if c.is_whitespace() {
+            index += 1;
+
             continue;   
         }
         match c {
