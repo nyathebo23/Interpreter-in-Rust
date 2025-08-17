@@ -71,6 +71,14 @@ pub fn tokenize(file_text: String, mut has_error: &mut bool) -> Vec<Token> {
                 );
             },
             '/' => {
+                let next_ind = index + 1;
+                if next_ind < n && code_symbols[next_ind] == '/' {
+                    index = next_ind + 1;
+                    while index < n && code_symbols[index] != '\n' {
+                        index = index + 1;
+                    }
+                    continue;
+                }
                 token_list.push(
                     Token { token_type: TokenType::SLASH, lexeme: Cow::Borrowed("/"), literal: None, line }
                 );
