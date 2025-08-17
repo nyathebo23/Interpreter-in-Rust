@@ -1,0 +1,182 @@
+pub mod declarations;
+pub mod utils;
+use std::borrow::Cow;
+use crate::scanner::declarations::*;
+use crate::scanner::utils::*;
+
+pub fn tokenize(file_text: String) -> Vec<Token> {
+    let mut token_list: Vec<Token> = Vec::new();
+    let code_symbols: Vec<char> = file_text.chars().collect();
+    let mut line = 1;
+    let mut index: usize = 0;
+    let n = code_symbols.len();
+    let keywordsmap = keywords_map();
+    while index < n {
+        let c = code_symbols[index];
+
+        if c == '\n' {
+            line += 1;
+            continue;
+        }
+        else if c.is_whitespace() {
+            continue;   
+        }
+        match c {
+            '(' => {
+                token_list.push(
+                    Token { token_type: TokenType::LEFTPAREN, lexeme: Cow::Borrowed("("), literal: None, line }
+                );
+            },
+            ')' => {
+                token_list.push(
+                    Token { token_type: TokenType::RIGHTPAREN, lexeme: Cow::Borrowed(")"), literal: None, line }
+                );
+            }, 
+            '{' => {
+                token_list.push(
+                    Token { token_type: TokenType::LEFTBRACE, lexeme: Cow::Borrowed("{"), literal: None, line }
+                );
+            },
+            '}' => {
+                token_list.push(
+                    Token { token_type: TokenType::RIGHTBRACE, lexeme: Cow::Borrowed("}"), literal: None, line }
+                );
+            },
+            ',' => {
+                token_list.push(
+                    Token { token_type: TokenType::COMMA, lexeme: Cow::Borrowed(","), literal: None, line }                    
+                );
+            },
+            ';' => {
+                token_list.push(
+                    Token { token_type: TokenType::SEMICOLON, lexeme: Cow::Borrowed(";"), literal: None, line }
+                );
+            },
+            '.' => {
+                token_list.push(
+                    Token { token_type: TokenType::DOT, lexeme: Cow::Borrowed("."), literal: None, line }
+                );
+            },
+            '+' => {
+                token_list.push(
+                    Token { token_type: TokenType::PLUS, lexeme: Cow::Borrowed("+"), literal: None, line }
+                );
+            },
+            '-' => {
+                token_list.push(
+                    Token { token_type: TokenType::MINUS, lexeme: Cow::Borrowed("-"), literal: None, line }
+                );
+            },
+            '/' => {
+                token_list.push(
+                    Token { token_type: TokenType::SLASH, lexeme: Cow::Borrowed("/"), literal: None, line }
+                );
+            },
+            '*' => {
+                token_list.push(
+                    Token { token_type: TokenType::STAR, lexeme: Cow::Borrowed("*"), literal: None, line }
+                );
+            },
+            '=' => {
+                let next_ind = index + 1;
+                if next_ind < n && code_symbols[next_ind] == '=' {
+                    token_list.push(
+                        Token { token_type: TokenType::EQUALEQUAL, lexeme: Cow::Borrowed("=="), literal: None, line }                      
+                    );
+                    index += 2;
+                    continue;
+                }
+                token_list.push(
+                    Token { token_type: TokenType::EQUAL, lexeme: Cow::Borrowed("="), literal: None, line }
+                );
+            },
+            '!' => {
+                let next_ind = index + 1;
+                if next_ind < n && code_symbols[next_ind] == '=' {
+                    token_list.push(
+                        Token { token_type: TokenType::BANGEQUAL, lexeme: Cow::Borrowed("!="), literal: None, line }                     
+                    );
+                    index += 2;
+                    continue;
+                }
+                token_list.push(
+                    Token { token_type: TokenType::BANG, lexeme: Cow::Borrowed("!"), literal: None, line }                    
+                );
+            },
+            '<' => {
+                let next_ind = index + 1;
+                if next_ind < n && code_symbols[next_ind] == '=' {
+                    token_list.push(
+                        Token { token_type: TokenType::LESSEQUAL, lexeme: Cow::Borrowed("<="), literal: None, line }                      
+                    );
+                    index += 2;
+                    continue;
+                }
+                token_list.push(
+                    Token { token_type: TokenType::LESS, lexeme: Cow::Borrowed("<"), literal: None, line }                      
+                );
+            },
+            '>' => {
+                let next_ind = index + 1;
+                if next_ind < n && code_symbols[next_ind] == '=' {
+                    token_list.push(
+                        Token { token_type: TokenType::GREATEREQUAL, lexeme: Cow::Borrowed(">="), literal: None, line }                      
+                    );
+                    index += 2;
+                    continue;
+                }
+                token_list.push(
+                    Token { token_type: TokenType::GREATER, lexeme: Cow::Borrowed(">"), literal: None, line }                      
+                );
+            },
+            '\"' => {
+                let literal_string = string(&code_symbols, &mut index, &n, &line);
+                let lexeme_str = format!("\"{literal_string}\"");
+
+                token_list.push(
+                    Token { token_type: TokenType::STRING,
+                        lexeme: Cow::Owned(lexeme_str), literal: Some(literal_string), line }
+                );
+            },
+            _ => {
+                if c.is_ascii_digit() {
+                    let num = number(&code_symbols, c, &mut index, &n,  &line);
+                    let literal_num = literal_number(num.as_str());
+                    token_list.push(
+                        Token { token_type: TokenType::NUMBER,
+                        lexeme: Cow::Owned(num), literal: Some(literal_num), line }, 
+                    );
+                }
+                else if c.is_ascii_lowercase() || c == '_' {
+                    let ident = identifier(&code_symbols, c, &mut index, &n, &line);
+                    match keywordsmap.get(ident.as_str()) {
+                        Some(token_type) => token_list.push(
+                            Token { token_type: token_type.clone(),
+                            lexeme: Cow::Owned(ident), literal: None, line }
+                        ),
+                        None => token_list.push(
+                            Token { token_type: TokenType::IDENTIFIER, 
+                            lexeme: Cow::Owned(ident), literal: None, line }
+                        ),
+                    } 
+                }
+            }
+        }
+        index += 1;
+    }
+    token_list
+
+}
+
+pub fn display_token(tokens: Vec<Token>) {
+    let token_type_str_map = token_type_str_map();
+    for token in tokens {
+        let token_type_str = *token_type_str_map.get(&token.token_type).unwrap();
+        let token_literal = match token.literal {
+            Some(str) => str,
+            None => "null".to_string()
+        };
+        let lexeme = token.lexeme;
+        println!("{token_type_str} {lexeme} {token_literal}");
+    }
+}
