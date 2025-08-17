@@ -14,6 +14,7 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
     let mut index: usize = 0;
     let n = code_symbols.len();
     let keywordsmap = keywords_map();
+    let mut has_error = false;
     while index < n {
         let c = code_symbols[index];
 
@@ -133,7 +134,7 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
                 );
             },
             '\"' => {
-                let literal_string = string(&code_symbols, &mut index, &n, &line);
+                let literal_string = string(&code_symbols, &mut index, &n, &line, &mut has_error);
                 let lexeme_str = format!("\"{literal_string}\"");
 
                 token_list.push(
@@ -143,7 +144,7 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
             },
             _ => {
                 if c.is_ascii_digit() {
-                    let num = number(&code_symbols, c, &mut index, &n,  &line);
+                    let num = number(&code_symbols, c, &mut index, &n,  &line, &mut has_error);
                     let literal_num = literal_number(num.as_str());
                     token_list.push(
                         Token { token_type: TokenType::NUMBER,
@@ -151,7 +152,7 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
                     );
                 }
                 else if c.is_ascii_lowercase() || c == '_' {
-                    let ident = identifier(&code_symbols, c, &mut index, &n, &line);
+                    let ident = identifier(&code_symbols, c, &mut index, &n, &line, &mut has_error);
                     match keywordsmap.get(ident.as_str()) {
                         Some(token_type) => token_list.push(
                             Token { token_type: token_type.clone(),
@@ -165,12 +166,16 @@ pub fn tokenize(file_text: String) -> Vec<Token> {
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
-                    process::exit(65);
+                    has_error = true;
                 }
             }
         }
         index += 1;
     }
+    if has_error  {
+        process::exit(65);
+    }
+
     token_list
 
 }

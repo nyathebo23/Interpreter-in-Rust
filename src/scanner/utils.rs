@@ -1,6 +1,6 @@
 use crate::error_handler::{handle_error, ErrorType};
 
-pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usize, line: &u32) -> String {
+pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
     let mut num = String::from(start_char);
     let mut last_char: char = start_char;
     while *index < *n {
@@ -27,11 +27,12 @@ pub fn number(symbols: &Vec<char>,  start_char: char, index: &mut usize, n: &usi
     }
     if last_char.is_ascii_alphabetic() || last_char == '_' {
         handle_error(line, ErrorType::LexicalError, format!("Unexpected character: {last_char}").as_str());
+        *has_err = true;
     }  
     num  
 }
 
-pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32) -> String {
+pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
     let mut val= String::from("");
     let mut end_string_found = false;
     while *index < *n {
@@ -47,11 +48,12 @@ pub fn string(symbols: &Vec<char>, index: &mut usize, n: &usize, line: &u32) -> 
     }
     if !end_string_found {
         handle_error(line, ErrorType::LexicalError, "Expected character: \"");
+        *has_err = true;
     }
     val
 }
 
-pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &usize, line: &u32) -> String {
+pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &usize, line: &u32, has_err: &mut bool) -> String {
     let mut ident = String::from(start_char);
     let mut last_char: char = start_char;
     while *index < *n {
@@ -63,6 +65,7 @@ pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &
     }
     if !(last_char.is_whitespace() || is_identifier_symbol(last_char)) {
         handle_error(line, ErrorType::LexicalError, format!("Unexpected character: {last_char}").as_str());
+        *has_err = true;
     }
     ident
 }
