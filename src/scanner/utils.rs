@@ -65,6 +65,7 @@ pub fn identifier(symbols: &Vec<char>, start_char: char, index: &mut usize, n: &
     if !(last_char.is_whitespace() || is_identifier_symbol(last_char)) {
         return Err(format!("Unexpected character: {last_char}"));
     }
+    println!("{}", ident);
     Ok(ident)
 }
 
