@@ -1,6 +1,7 @@
 
 use crate::error_handler::*;
 use crate::parser::declarations::*;
+use crate::scanner::declarations::keywords_map;
 use std::process;
 
 pub trait Expression {
@@ -150,6 +151,8 @@ impl  Expression for BinaryExpr {
     fn to_string(&self) -> String {
         let child1 = self.value1.to_string();
         let child2 = self.value1.to_string();
-        format!("(= {child1} {child2 })") 
+        let operator_map = binary_op_map();
+
+        format!("({} {child1} {child2})", operator_map[&self.operator]) 
     }
 }

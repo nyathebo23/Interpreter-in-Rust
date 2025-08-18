@@ -1,5 +1,5 @@
 
-use std::{ops::{Add, Div, Mul, Sub}};
+use std::{collections::HashMap, ops::{Add, Div, Mul, Sub}};
 
 use crate::scanner::declarations::*;
 use crate::scanner::utils::literal_number;
@@ -85,6 +85,7 @@ impl PartialEq for BasicType {
     }
 }
 
+#[derive(Hash, PartialEq, Eq)]
 pub enum BinaryOperator {
     PLUS,
     MINUS,
@@ -122,3 +123,18 @@ pub const MAP_PLUS_MINUS_OP:  [(TokenType, BinaryOperator); 2] = [
     (TokenType::PLUS, BinaryOperator::PLUS),
     (TokenType::MINUS, BinaryOperator::MINUS),
 ];
+
+pub fn binary_op_map() -> HashMap<BinaryOperator, &'static str> {
+    HashMap::from([
+        (BinaryOperator::EQUALEQUAL, "=="),
+        (BinaryOperator::BANGEQUAL, "!="),
+        (BinaryOperator::LESS, "<"),
+        (BinaryOperator::LESSEQUAL, "<="),
+        (BinaryOperator::GREATER, ">"),
+        (BinaryOperator::GREATEREQUAL, ">="),
+        (BinaryOperator::PLUS, "+"),
+        (BinaryOperator::MINUS, "-"),
+        (BinaryOperator::SLASH, "/"),
+        (BinaryOperator::STAR, "*"),
+    ])
+}
