@@ -16,7 +16,7 @@ pub fn handle_error(line: &u32, error_type: ErrorType, error_text: &str) {
             let _ = stderr.write(format!("{error_text}\n[line {line}]\n").as_bytes());
         },
         ErrorType::SyntacticError => {
-            let _ = stderr.write(format!("[line {line}] Error {error_text}\n").as_bytes());
+            let _ = stderr.write(format!("[line {line}] {error_text}\n").as_bytes());
 
         }
     }

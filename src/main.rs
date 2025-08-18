@@ -6,7 +6,7 @@ use std::process;
 use crate::parser::expression;
 use crate::scanner::display_token;
 use crate::scanner::tokenize;
-use crate::statements::print_statement;
+use crate::statements::run;
 mod scanner;
 mod error_handler;
 mod parser;
@@ -67,7 +67,8 @@ fn main() {
             let tokens = tokenize(file_contents, &mut errors);
             let mut index: usize = 0;
             let tokens_len = tokens.len();
-            print_statement(&tokens, &mut index, tokens_len);
+
+            run(&tokens, &mut index, tokens_len);
 
         },
         _ => {
