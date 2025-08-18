@@ -81,7 +81,6 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                 println!("{}", left_expr.to_string());
                 break;
             }
-            break 'outer;
         }
     }    
     left_expr
