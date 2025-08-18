@@ -9,7 +9,7 @@ pub enum Type {
     NIL,
     //CLASSOBJ  
 }
-pub trait Object: ValueObjTrait {
+pub trait Object: ValueObjTrait + ToString {
     fn to_str(&self) -> Cow<'static, str>;
     fn get_type(&self) -> Type;
     fn dyn_clone(&self) -> Box<dyn Object>;
