@@ -1,7 +1,6 @@
 
 use crate::error_handler::*;
 use crate::parser::declarations::*;
-use crate::scanner::declarations::keywords_map;
 use std::process;
 
 pub trait Expression {
