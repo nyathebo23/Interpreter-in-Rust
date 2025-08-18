@@ -119,10 +119,10 @@ impl  Expression for BinaryExpr {
                 perform_num_op(val1, val2, |x, y| x / y, &self.line)
             },
             BinaryOperator::EQUALEQUAL => {
-                check_equality(val1, val2)
+                check_equality(val1, val2, true)
             },
             BinaryOperator::BANGEQUAL => {
-                check_equality(val1, val2)
+                check_equality(val1, val2, false)
             },
             BinaryOperator::GREATER => {
                 perform_comparison(val1, val2, |x, y| x > y, &self.line)

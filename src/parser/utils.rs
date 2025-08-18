@@ -57,26 +57,26 @@ pub fn perform_add(data1: Box<dyn Object>, data2: Box<dyn Object>, line: &u32) -
 
 
 
-pub fn check_equality(data1: Box<dyn Object>, data2: Box<dyn Object>) -> Box<dyn Object>  
+pub fn check_equality(data1: Box<dyn Object>, data2: Box<dyn Object>, check: bool) -> Box<dyn Object>  
 {
     let boolean = match (data1.get_type(), data2.get_type()) {
         (Type::BOOLEAN, Type::BOOLEAN) => {
             let b1 = data1.as_bool().unwrap();
             let b2 = data2.as_bool().unwrap();
-            Bool(b1.0 == b2.0)          
+            Bool((b1.0 == b2.0) == check)          
         },
         (Type::NUMBER, Type::NUMBER) => {
             let num1 = data1.as_number().unwrap();
             let num2 = data2.as_number().unwrap();
-            Bool(num1.0 == num2.0)
+            Bool((num1.0 == num2.0) == check)
         },
         (Type::STRING, Type::STRING) => {
             let str1 = data1.as_str().unwrap();
             let str2 = data2.as_str().unwrap();
-            Bool(str1.0 == str2.0)
+            Bool((str1.0 == str2.0) == check)
         },
         _  => {
-            Bool(false)
+            Bool(false == check)
         }      
     };
     Box::new(boolean)
