@@ -58,7 +58,7 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
         (("q27", 'L'), "q28"),
         (("q28", ' '), "qf"),
 
-        (("q0", 'O'), "q29"),
+        (("q0", 'O'), "q30"),
         (("q30", 'R'), "q31"),
         (("q31", ' '), "qf"),
 
