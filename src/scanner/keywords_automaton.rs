@@ -136,6 +136,7 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
         }; 
     }
     if next_state == "qf" {
+        println!("{}", keyword);
         return Some(keyword);
     }
     None
