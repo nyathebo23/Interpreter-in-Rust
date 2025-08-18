@@ -100,6 +100,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
         },
         TokenType::STRING => {
             let token_str = token.literal.clone().unwrap();
+            println!("{}", token_str);
             Box::new(LiteralExpr { value: BasicType::STRING(token_str)})
         },
         TokenType::NUMBER => {
@@ -117,7 +118,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
                 value: child_expr,
                 line: token.line
             };   
-            return Box::new(expr); 
+            Box::new(expr) 
         },
         TokenType::BANG => {
             *index += 1;
