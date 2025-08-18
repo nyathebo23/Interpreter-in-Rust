@@ -221,6 +221,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                             break;
                         }
                     };
+                    continue;
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
