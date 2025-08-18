@@ -120,7 +120,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
                 value: child_expr,
                 line: token.line
             };   
-            Box::new(expr) 
+            return Box::new(expr);
         },
         TokenType::BANG => {
             *index += 1;
@@ -130,7 +130,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
                 value: child_expr,
                 line: token.line
             };
-            Box::new(expr)
+            return Box::new(expr);
         }
         _ => {
             handle_error(&token.line, ErrorType::SyntacticError, format!("Error at {0}: Expect expression.", token.lexeme).as_str());
