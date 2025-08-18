@@ -63,9 +63,9 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
     prec_expr: Box<dyn Expression>, size_list: usize) -> Box<dyn Expression>
 {
     let mut left_expr = prec_expr;
-    println!("{}", *index);
     'outer: while *index < size_list {
         let current_token = &tokens_list[*index];
+        println!("{} {}", *index, current_token.lexeme);
         for (token_type, token_op) in MAP_SLASH_STAR_OP {
             if token_type == current_token.token_type  {
                 *index += 1;
