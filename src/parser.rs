@@ -25,10 +25,10 @@ fn expr_comp_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                     value2: right_expr,
                     line: current_token.line
                 });
-                break;
+                continue 'outer;
             }
-            break 'outer;
         }
+        break;
     }
     left_expr
 }
@@ -51,10 +51,10 @@ fn expr_plus_minus_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                     value2: right_expr,
                     line: current_token.line
                 });
-                break;
+                continue 'outer;
             }
-            break 'outer;
         }
+        break;
     }    
     left_expr
 }
@@ -65,12 +65,9 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
     let mut left_expr = prec_expr;
     'outer: while *index < size_list {
         let current_token = &tokens_list[*index];
-        println!("{} {}", *index, current_token.lexeme);
         for (token_type, token_op) in MAP_SLASH_STAR_OP {
             if token_type == current_token.token_type  {
                 *index += 1;
-                println!("{} {}", *index, current_token.lexeme);
-
                 let right_expr = non_binary_expr(&tokens_list, &mut index, size_list);
                 left_expr = Box::new(BinaryExpr {
                     operator: token_op,
@@ -78,10 +75,10 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                     value2: right_expr,
                     line: current_token.line
                 });
-                println!("{}", left_expr.to_string());
-                break;
+                continue 'outer;
             }
         }
+        break;
     }    
     left_expr
 }
