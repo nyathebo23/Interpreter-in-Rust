@@ -76,7 +76,7 @@ impl  Expression for UnaryExpr {
             },
             UnaryOperator::MINUS => {
                 match value_evaluated.get_type() {
-                    Type::BOOLEAN => {
+                    Type::NUMBER => {
                         let num = value_evaluated.as_number().unwrap();
                         return Box::new(Number(-num.0));
                     },
