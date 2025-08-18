@@ -1,9 +1,11 @@
 pub mod declarations;
 pub mod utils;
+pub mod keywords_automaton;
 use std::borrow::Cow;
 use crate::error_handler::handle_error;
 use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
+use crate::scanner::keywords_automaton::check_keywords;
 use crate::scanner::utils::*;
 
 pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
@@ -161,6 +163,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                     }
                 }
             },
+            
             _ => {
                 if c.is_ascii_digit() {
                     index += 1;
@@ -204,6 +207,20 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         }
                     }
                     continue;
+                }
+                else if c.is_ascii_uppercase() {
+                    match check_keywords(&code_symbols, &mut index, &n) {
+                        Some(word) => {
+                            let token_type = keywordsmap.get(word.to_lowercase().as_str()).unwrap();
+                            token_list.push(
+                                Token { token_type: token_type.clone(), lexeme: Cow::Owned(word), literal: None, line }
+                            );
+                        },
+                        None => {
+                            *has_error = true;
+                            break;
+                        }
+                    };
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
