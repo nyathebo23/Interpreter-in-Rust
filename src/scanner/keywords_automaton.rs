@@ -119,22 +119,26 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
     // };
     let mut next_state = "q0";
     
-    while *index < *n && next_state != "qf"  {
+    while *index < *n {
         let c = symbols[*index];
         match transits.get(&(next_state, c)) {
             Some(new_state) => {
                 next_state = *new_state;
-                keyword.push(c);
                 *index += 1;
+                if next_state != "qf" {
+                    break;
+                }
+                keyword.push(c);
             },
             None => {
                 break;
             }
         }; 
     }
-
     if next_state == "qf" {
         keyword.pop();
+        println!("{}", keyword);
+
         return Some(keyword);
     }
     None
