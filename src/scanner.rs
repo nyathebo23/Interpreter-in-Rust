@@ -211,10 +211,25 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                 else if c.is_ascii_uppercase() {
                     match check_keywords(&code_symbols, &mut index, &n) {
                         Some(word) => {
-                            let token_type = keywordsmap.get(word.to_lowercase().as_str()).unwrap();
-                            token_list.push(
-                                Token { token_type: token_type.clone(), lexeme: Cow::Owned(word), literal: None, line }
-                            );
+                            let token =  match word.as_str() {
+                                "FALSE" => {
+                                   Token { token_type: TokenType::IDENTIFIER, 
+                                    lexeme: Cow::Borrowed("FALSE"), literal: None, line }
+                                },
+                                "TRUE" => {
+                                    Token { token_type: TokenType::IDENTIFIER, 
+                                    lexeme: Cow::Borrowed("TRUE"), literal: None, line }
+                                },
+                                "NIL" => {
+                                    Token { token_type: TokenType::IDENTIFIER, 
+                                    lexeme: Cow::Borrowed("NIL"), literal: None, line }
+                                },
+                                _ => {
+                                    let token_type = keywordsmap.get(word.to_lowercase().as_str()).unwrap();
+                                    Token { token_type: token_type.clone(), lexeme: Cow::Owned(word), literal: None, line }
+                                }
+                            };
+                            token_list.push(token);
                         },
                         None => {
                             *has_error = true;
