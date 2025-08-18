@@ -38,10 +38,14 @@ fn main() {
             let file_contents = file_text(filename);
             let mut errors = false;
             let tokens = tokenize(file_contents, &mut errors);
+            if errors {
+                process::exit(65);
+            }
             let mut index: usize = 0;
             let tokens_len = tokens.len();
             let express = expression(&tokens, &mut index, tokens_len);
             println!("{}", express.to_string());
+
         },
         "evaluate" => {
             let file_contents = file_text(filename);
