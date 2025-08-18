@@ -1,11 +1,10 @@
 pub mod declarations;
 pub mod utils;
-pub mod keywords_automaton;
+
 use std::borrow::Cow;
 use crate::error_handler::handle_error;
 use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
-use crate::scanner::keywords_automaton::check_keywords;
 use crate::scanner::utils::*;
 
 pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
@@ -184,7 +183,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                     }
                     continue;
                 }
-                else if c.is_ascii_lowercase() || c == '_' {
+                else if c.is_ascii_alphabetic() || c == '_' {
                     index += 1;
                     let result_ident = identifier(&code_symbols, c, &mut index, &n);
                     match result_ident {
@@ -206,36 +205,6 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                             break;
                         }
                     }
-                    continue;
-                }
-                else if c.is_ascii_uppercase() {
-                    match check_keywords(&code_symbols, &mut index, &n) {
-                        Some(word) => {
-                            let token =  match word.as_str() {
-                                "FALSE" => {
-                                   Token { token_type: TokenType::IDENTIFIER, 
-                                    lexeme: Cow::Borrowed("FALSE"), literal: None, line }
-                                },
-                                "TRUE" => {
-                                    Token { token_type: TokenType::IDENTIFIER, 
-                                    lexeme: Cow::Borrowed("TRUE"), literal: None, line }
-                                },
-                                "NIL" => {
-                                    Token { token_type: TokenType::IDENTIFIER, 
-                                    lexeme: Cow::Borrowed("NIL"), literal: None, line }
-                                },
-                                _ => {
-                                    let token_type = keywordsmap.get(word.to_lowercase().as_str()).unwrap();
-                                    Token { token_type: token_type.clone(), lexeme: Cow::Owned(word), literal: None, line }
-                                }
-                            };
-                            token_list.push(token);
-                        },
-                        None => {
-                            *has_error = true;
-                            break;
-                        }
-                    };
                     continue;
                 }
                 else {
