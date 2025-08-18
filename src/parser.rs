@@ -69,6 +69,8 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
         for (token_type, token_op) in MAP_SLASH_STAR_OP {
             if token_type == current_token.token_type  {
                 *index += 1;
+                println!("{} {}", *index, current_token.lexeme);
+
                 let right_expr = non_binary_expr(&tokens_list, &mut index, size_list);
                 left_expr = Box::new(BinaryExpr {
                     operator: token_op,
