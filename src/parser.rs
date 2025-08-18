@@ -83,6 +83,7 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
 fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: usize) -> Box<dyn Expression> 
  {
     let token = &tokens_list[*index];
+    println!("{}", *index);
     let expr: Box<dyn Expression>  =  match token.token_type {
         TokenType::LEFTPAREN => {
             *index += 1;
