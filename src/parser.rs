@@ -12,7 +12,7 @@ fn expr_comp_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
 {
     let mut left_expr = prec_expr;
     left_expr = expr_plus_minus_precedence(&tokens_list, &mut index, left_expr, size_list);
-    while *index < size_list {
+    'outer: while *index < size_list {
         let current_token = &tokens_list[*index];
         for (token_type, token_op) in MAP_COMP_TOKEN_OP {
             if token_type == current_token.token_type {
@@ -27,8 +27,8 @@ fn expr_comp_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                 });
                 break;
             }
+            break 'outer;
         }
-        break;
     }
     left_expr
 }
@@ -38,7 +38,7 @@ fn expr_plus_minus_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
 {
     let mut left_expr = prec_expr;
     left_expr = expr_star_slash_precedence(&tokens_list, &mut index, left_expr, size_list);
-    while *index < size_list {
+    'outer: while *index < size_list {
         let current_token = &tokens_list[*index];
         for (token_type, token_op) in MAP_PLUS_MINUS_OP {
             if token_type == current_token.token_type  {
@@ -53,8 +53,8 @@ fn expr_plus_minus_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                 });
                 break;
             }
+            break 'outer;
         }
-        break;
     }    
     left_expr
 }
@@ -63,7 +63,7 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
     prec_expr: Box<dyn Expression>, size_list: usize) -> Box<dyn Expression>
 {
     let mut left_expr = prec_expr;
-    while *index < size_list {
+    'outer: while *index < size_list {
         let current_token = &tokens_list[*index];
         for (token_type, token_op) in MAP_SLASH_STAR_OP {
             if token_type == current_token.token_type  {
@@ -77,9 +77,8 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
                 });
                 break;
             }
+            break 'outer;
         }
-        println!("{}", *index);
-        break;
     }    
     left_expr
 }

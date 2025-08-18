@@ -149,7 +149,7 @@ impl  Expression for BinaryExpr {
 
     fn to_string(&self) -> String {
         let child1 = self.value1.to_string();
-        let child2 = self.value1.to_string();
+        let child2 = self.value2.to_string();
         let operator_map = binary_op_map();
 
         format!("({} {child1} {child2})", operator_map[&self.operator]) 
