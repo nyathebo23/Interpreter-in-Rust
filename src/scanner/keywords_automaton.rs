@@ -44,7 +44,7 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
         (("q19", 'R'), "q20"),
         (("q20", ' '), "qf"),
 
-        (("q14", 'U'), "q21"),
+        (("q14", 'U'), "q22"),
         (("q22", 'N'), "q23"),
         (("q23", ' '), "qf"),
 
@@ -136,9 +136,6 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
         }; 
     }
     if next_state == "qf" {
-
-        println!("{}", keyword);
-
         return Some(keyword);
     }
     None
