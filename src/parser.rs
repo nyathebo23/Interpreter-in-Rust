@@ -83,7 +83,7 @@ fn expr_star_slash_precedence(tokens_list: &Vec<Token>, mut index: &mut usize,
 fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: usize) -> Box<dyn Expression> 
  {
     let token = &tokens_list[*index];
-    let expr =  match token.token_type {
+    let expr: Box<dyn Expression>  =  match token.token_type {
         TokenType::LEFTPAREN => {
             *index += 1;
             let child_expr = expression(&tokens_list, &mut index, size_list);  
@@ -95,7 +95,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
                 handle_error(&next_token.line, ErrorType::SyntacticError, "Error: Expected character ')'");
                 process::exit(65);
             }
-            return Box::new(expr);
+            Box::new(expr)
         },
         TokenType::STRING => {
             let token_str = token.literal.clone().unwrap();
@@ -103,7 +103,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
         },
         TokenType::NUMBER => {
             let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-            return Box::new(LiteralExpr { value: BasicType::NUMBER(number)});
+            Box::new(LiteralExpr { value: BasicType::NUMBER(number)})
         },
         TokenType::NIL => Box::new(LiteralExpr { value: BasicType::NIL}),
         TokenType::TRUE => Box::new(LiteralExpr { value: BasicType::BOOLEAN(true)}),
@@ -126,7 +126,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
                 value: child_expr,
                 line: token.line
             };
-            return Box::new(expr); 
+            Box::new(expr)
         }
         _ => {
             handle_error(&token.line, ErrorType::SyntacticError, format!("Error at {0}: Expect expression.", token.lexeme).as_str());
