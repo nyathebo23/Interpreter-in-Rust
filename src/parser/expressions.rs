@@ -35,7 +35,7 @@ impl Expression for LiteralExpr {
     }
 
     fn to_string(&self) -> String {
-        self.value.to_string()
+        self.value.to_str()
     }
 }
 

@@ -16,10 +16,21 @@ impl ToString for BasicType {
     fn to_string(&self) -> String {
         match self {
             BasicType::STRING(str) => str.clone(),
-            BasicType::NUMBER(num) => literal_number(num.to_string().as_str()),
+            BasicType::NUMBER(num) => num.to_string(),
             BasicType::BOOLEAN(b) => b.to_string(),
             BasicType::NIL => String::from("nil")
         }
+    }
+}
+
+impl BasicType {
+    pub fn to_str(&self) -> String {
+        match self {
+            BasicType::STRING(str) => str.clone(),
+            BasicType::NUMBER(num) => literal_number(num.to_string().as_str()),
+            BasicType::BOOLEAN(b) => b.to_string(),
+            BasicType::NIL => String::from("nil")
+        } 
     }
 }
 
