@@ -118,7 +118,7 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
     //     initial_state: "q0"
     // };
     let mut next_state = "q0";
-
+    
     while *index < *n && next_state != "qf"  {
         let c = symbols[*index];
         match transits.get(&(next_state, c)) {
@@ -132,8 +132,9 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
             }
         }; 
     }
-    println!("{}", keyword);
+
     if next_state == "qf" {
+        keyword.pop();
         return Some(keyword);
     }
     None
