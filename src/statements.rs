@@ -23,10 +23,11 @@ pub fn run(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: usize) {
                 print_statement(tokens_list, &mut index, size_list);
             },
             _ => {
-                let _expr = expression(&tokens_list, &mut index, size_list);
+                let expr = expression(&tokens_list, &mut index, size_list);
                 if tokens_list[*index].token_type != TokenType::SEMICOLON {
                     process::exit(65);  
                 }  
+                expr.evaluate();
                 *index += 1;
             } 
         } 
