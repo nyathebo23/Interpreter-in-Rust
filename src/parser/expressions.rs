@@ -86,6 +86,7 @@ impl  Expression for UnaryExpr {
                     },
                     _ => {
                         handle_error(&self.line, ErrorType::RuntimeError, "Operand must be a number.");
+                        process::exit(70);
                     }
                 }
             }
