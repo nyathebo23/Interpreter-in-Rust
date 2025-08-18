@@ -133,6 +133,7 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
             process::exit(65);
         }
     }
+    *index += 1;
 }
 
 pub fn expression(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: usize) -> Box<dyn Expression> {
