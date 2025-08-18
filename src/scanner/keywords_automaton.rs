@@ -125,7 +125,7 @@ pub fn check_keywords(symbols: &Vec<char>, index: &mut usize, n: &usize) -> Opti
             Some(new_state) => {
                 next_state = *new_state;
                 *index += 1;
-                if next_state != "qf" {
+                if next_state == "qf" {
                     break;
                 }
                 keyword.push(c);
