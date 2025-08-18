@@ -1,10 +1,15 @@
 
 use crate::error_handler::*;
 use crate::parser::declarations::*;
+use crate::parser::operators_decl::*;
+use crate::parser::utils::check_equality;
+use crate::parser::utils::perform_add;
+use crate::parser::utils::perform_comparison;
+use crate::parser::utils::perform_num_op;
 use std::process;
 
 pub trait Expression {
-    fn evaluate(&self) -> BasicType;
+    fn evaluate(&self) -> Box<dyn Object>;
     fn to_string(&self) -> String;
 }
 
@@ -22,7 +27,7 @@ pub struct UnaryExpr {
 }
 
 pub struct LiteralExpr {
-    pub value: BasicType,
+    pub value: Box<dyn Object>,
 }
 
 pub struct GroupExpr  {
@@ -30,17 +35,17 @@ pub struct GroupExpr  {
 }
 
 impl Expression for LiteralExpr {
-    fn evaluate(&self) -> BasicType {
-        return self.value.clone();
+    fn evaluate(&self) -> Box <dyn Object> {
+        return self.value.dyn_clone();
     }
 
     fn to_string(&self) -> String {
-        self.value.to_str()
+        self.value.to_str().to_string()
     }
 }
 
 impl Expression for GroupExpr {
-    fn evaluate(&self) -> BasicType {
+    fn evaluate(&self) -> Box <dyn Object> {
         return self.value.evaluate();
     }
 
@@ -50,39 +55,30 @@ impl Expression for GroupExpr {
     }
 }
 
-fn perform_comparison<F>(data1: BasicType, data2: BasicType, f: F, line: &u32) -> BasicType 
-where F: Fn(f64, f64) -> bool
-{
-    match (data1, data2) {
-        (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => BasicType::BOOLEAN(f(num1, num2)),
-        _ => {
-            handle_error(line, ErrorType::RuntimeError, "Operand must be a number.");
-            process::exit(70);
-        }
-    }
-}
 
 impl  Expression for UnaryExpr {
-    fn evaluate(&self) -> BasicType {
+    fn evaluate(&self) -> Box <dyn Object> {
         let value_evaluated = self.value.evaluate();
         match self.operator {
             UnaryOperator::BANG => {
-                match value_evaluated {
-                    BasicType::BOOLEAN(boolean ) => {
-                        return BasicType::BOOLEAN(!boolean);
+                match value_evaluated.get_type() {
+                    Type::BOOLEAN => {
+                        let bool = value_evaluated.as_bool().unwrap();
+                        return Box::new(Bool(!bool.0));
                     },
-                    BasicType::NIL => {
-                        return BasicType::BOOLEAN(true);
+                    Type::NIL => {
+                        return Box::new(Bool(true));
                     },
                     _ => {
-                        return BasicType::BOOLEAN(false);
+                        return Box::new(Bool(false));
                     }
                 }
             },
             UnaryOperator::MINUS => {
-                match value_evaluated {
-                    BasicType::NUMBER(num) => {
-                        return BasicType::NUMBER(-num);
+                match value_evaluated.get_type() {
+                    Type::BOOLEAN => {
+                        let num = value_evaluated.as_number().unwrap();
+                        return Box::new(Number(-num.0));
                     },
                     _ => {
                         handle_error(&self.line, ErrorType::RuntimeError, "Operand must be a number.");
@@ -91,7 +87,6 @@ impl  Expression for UnaryExpr {
                 }
             }
         }
-        return self.value.evaluate();
     }
 
     fn to_string(&self) -> String {
@@ -106,45 +101,41 @@ impl  Expression for UnaryExpr {
 
 impl  Expression for BinaryExpr {
     
-    fn evaluate(&self) -> BasicType {
+    fn evaluate(&self) -> Box<dyn Object> {
 
         let val1 = self.value1.evaluate();
         let val2 = self.value2.evaluate();
         match self.operator {
             BinaryOperator::PLUS => {
-                let result = (val1 + val2).unwrap_or_else(|err| {
-                    handle_error(&self.line, ErrorType::RuntimeError, err.as_str());
-                    process::exit(70);
-                });
-                result
+                perform_add(val1, val2, &self.line)
             },
             BinaryOperator::MINUS => {
-                let result = (val1 - val2).unwrap_or_else(|err| {
-                    handle_error(&self.line, ErrorType::RuntimeError, err.as_str());
-                    process::exit(70);
-                });
-                result 
+                perform_num_op(val1, val2, |x, y| x - y, &self.line)
             },
             BinaryOperator::STAR => {
-                let result = (val1 * val2).unwrap_or_else(|err| {
-                    handle_error(&self.line, ErrorType::RuntimeError, err.as_str());
-                    process::exit(70);
-                });
-                result
+                perform_num_op(val1, val2, |x, y| x * y, &self.line)
             },
             BinaryOperator::SLASH => {
-                let result = (val1 / val2).unwrap_or_else(|err| {
-                    handle_error(&self.line, ErrorType::RuntimeError, err.as_str());
-                    process::exit(70);
-                });
-                result
+                perform_num_op(val1, val2, |x, y| x / y, &self.line)
             },
-            BinaryOperator::EQUALEQUAL => BasicType::BOOLEAN(val1 == val2),
-            BinaryOperator::BANGEQUAL => BasicType::BOOLEAN(val1 != val2),
-            BinaryOperator::GREATER => perform_comparison(val1, val2, |x, y| x > y, &self.line),
-            BinaryOperator::GREATEREQUAL => perform_comparison(val1, val2, |x, y| x >= y, &self.line),
-            BinaryOperator::LESS => perform_comparison(val1, val2, |x, y| x < y, &self.line),
-            BinaryOperator::LESSEQUAL => perform_comparison(val1, val2, |x, y| x <= y, &self.line),
+            BinaryOperator::EQUALEQUAL => {
+                check_equality(val1, val2)
+            },
+            BinaryOperator::BANGEQUAL => {
+                check_equality(val1, val2)
+            },
+            BinaryOperator::GREATER => {
+                perform_comparison(val1, val2, |x, y| x > y, &self.line)
+            },
+            BinaryOperator::GREATEREQUAL => {
+                perform_comparison(val1, val2, |x, y| x >= y, &self.line)                
+            },
+            BinaryOperator::LESS => {
+                perform_comparison(val1, val2, |x, y| x < y, &self.line)                
+            },
+            BinaryOperator::LESSEQUAL => {
+                perform_comparison(val1, val2, |x, y| x <= y, &self.line)                
+            },
         }
     }
 
@@ -152,7 +143,6 @@ impl  Expression for BinaryExpr {
         let child1 = self.value1.to_string();
         let child2 = self.value2.to_string();
         let operator_map = binary_op_map();
-
         format!("({} {child1} {child2})", operator_map[&self.operator]) 
     }
 }

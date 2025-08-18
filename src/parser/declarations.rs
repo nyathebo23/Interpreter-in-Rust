@@ -1,151 +1,184 @@
 
-use std::{collections::HashMap, ops::{Add, Div, Mul, Sub}};
-
-use crate::scanner::declarations::*;
+use std::{borrow::Cow, ops::{Add, Div, Mul, Sub}};
 use crate::scanner::utils::literal_number;
 
+pub enum Type {
+    STRING,
+    NUMBER,
+    BOOLEAN,
+    NIL,
+    //CLASSOBJ  
+}
+pub trait Object: ValueObjTrait {
+    fn to_str(&self) -> Cow<'static, str>;
+    fn get_type(&self) -> Type;
+    fn dyn_clone(&self) -> Box<dyn Object>;
+
+}
+
+pub trait ValueObjTrait {
+    fn as_number(&self) -> Option<&Number> {
+        None
+    }
+
+    fn as_str(&self) -> Option<&Str> {
+        None
+    }
+
+    fn as_bool(&self) -> Option<&Bool> {
+        None
+    }
+
+    fn as_nil(&self) -> Option<&NIL> {
+        None
+    }
+}
+
 #[derive(Clone)]
-pub enum BasicType {
-    STRING(String),
-    NUMBER(f64),
-    BOOLEAN(bool),
-    NIL
+pub struct Str (pub String);
+
+#[derive(Clone)]
+pub struct Number (pub f64);
+
+#[derive(Clone)]
+pub struct Bool (pub bool);
+
+#[derive(Clone)]
+pub struct NIL;
+
+impl Object for Str {
+    fn to_str(&self) -> Cow<'static, str> {
+        return Cow::Owned(self.0.clone());
+    }
+    fn get_type(&self) -> Type {
+        Type::STRING
+    }
+    fn dyn_clone(&self) -> Box<dyn Object> {
+        Box::new(Str(self.0.clone()))
+    }
 }
 
-impl ToString for BasicType {
+impl Object for Number {
+    fn to_str(&self) -> Cow<'static, str> {
+        return Cow::Owned(self.0.to_string());
+    }
+    fn get_type(&self) -> Type {
+        Type::NUMBER
+    }
+    fn dyn_clone(&self) -> Box<dyn Object> {
+        Box::new(Number(self.0))
+    }
+}
+
+impl Object for Bool   {
+    fn to_str(&self) -> Cow<'static, str> {
+        if self.0 { Cow::Borrowed("true") }
+        else { Cow::Borrowed("false") }
+    }   
+    fn get_type(&self) -> Type {
+        Type::BOOLEAN
+    } 
+    fn dyn_clone(&self) -> Box<dyn Object> {
+        Box::new(Bool(self.0))
+    }
+}
+
+impl Object for NIL  {
+    fn to_str(&self) -> Cow<'static, str>  {
+        return Cow::Borrowed("nil");
+    }
+    fn get_type(&self) -> Type {
+        Type::NIL
+    }
+    fn dyn_clone(&self) -> Box<dyn Object> {
+        Box::new(NIL)
+    }
+}
+
+
+impl ToString for Str {
     fn to_string(&self) -> String {
-        match self {
-            BasicType::STRING(str) => str.clone(),
-            BasicType::NUMBER(num) => num.to_string(),
-            BasicType::BOOLEAN(b) => b.to_string(),
-            BasicType::NIL => String::from("nil")
-        }
+        self.0.clone()
     }
 }
 
-impl BasicType {
-    pub fn to_str(&self) -> String {
-        match self {
-            BasicType::STRING(str) => str.clone(),
-            BasicType::NUMBER(num) => literal_number(num.to_string().as_str()),
-            BasicType::BOOLEAN(b) => b.to_string(),
-            BasicType::NIL => String::from("nil")
-        } 
+impl ToString for Number {
+    fn to_string(&self) -> String {
+        literal_number(&self.to_str())
     }
 }
 
-impl Add for BasicType {
-    type Output = Result<BasicType, String> ;
-    
-    fn add(self, other: BasicType) -> Result<BasicType, String> {
-        match (self, other) {
-            (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => Ok(BasicType::NUMBER(num1 + num2)),
-            (BasicType::STRING(str1), BasicType::STRING(str2)) => {
-                let mut concat_str = str1.clone();
-                concat_str.push_str(str2.clone().as_str());
-                return Ok(BasicType::STRING(concat_str));
-            },
-            _ => Err("Operands must be two numbers or two strings.".to_string())
-        }
+impl ToString for Bool  {
+    fn to_string(&self) -> String {
+        self.0.to_string()
     }
 }
 
-impl Mul for BasicType {
-    type Output = Result<BasicType, String>;
-    
-    fn mul(self, other: BasicType) -> Result<BasicType, String> {
-        match (self, other) {
-            (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => Ok(BasicType::NUMBER(num1 * num2)),
-            _ => Err("Operand must be a number.".to_string())
-        }
-    }
-}
-
-impl Div for BasicType {
-    type Output = Result<BasicType, String>;
-    
-    fn div(self, other: BasicType) -> Result<BasicType, String> {
-        match (self, other) {
-            (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => Ok(BasicType::NUMBER(num1 / num2)),
-            _ => Err("Operand must be a number.".to_string())
-        }
-    }
-}
-
-impl Sub for BasicType {
-    type Output = Result<BasicType, String>;
-    
-    fn sub(self, other: BasicType) -> Result<BasicType, String> {
-        match (self, other) {
-            (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => Ok(BasicType::NUMBER(num1 - num2)),
-            _ => Err("Operand must be a number.".to_string())
-        }
+impl ToString for NIL  {
+    fn to_string(&self) -> String {
+        "nil".to_string()
     }
 }
 
 
-impl PartialEq for BasicType {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (BasicType::BOOLEAN(bool1), BasicType::BOOLEAN(bool2)) => *bool1 == *bool2,
-            (BasicType::BOOLEAN(bool), BasicType::NIL) => *bool == false,
-            (BasicType::NUMBER(num1), BasicType::NUMBER(num2)) => *num1 == *num2,
-            (BasicType::STRING(str1), BasicType::STRING(str2)) => *str1 == *str2,
-            _ => false
-        }
+impl Add for Str {
+    type Output = Str ;
+    fn add(self, other: Str) -> Str {
+        let mut concat_str = self.0.clone();
+        concat_str.push_str(other.0.clone().as_str());
+        Str(concat_str) 
     }
 }
 
-#[derive(Hash, PartialEq, Eq)]
-pub enum BinaryOperator {
-    PLUS,
-    MINUS,
-    STAR,
-    SLASH,
-    BANGEQUAL,
-    EQUALEQUAL,
-    LESS,
-    LESSEQUAL,
-    GREATER,
-    GREATEREQUAL,
+impl Add for Number {
+    type Output = Number ;
+    fn add(self, other: Number) -> Number {
+        Number(self.0 + other.0)
+    }
+} 
+
+impl Sub for Number {
+    type Output = Number ;
+    fn sub(self, other: Number) -> Number {
+        Number(self.0 - other.0)
+    }
 }
 
-pub enum UnaryOperator {
-    BANG,
-    MINUS
+impl Mul for Number {
+    type Output = Number ;
+    fn mul(self, other: Number) -> Number  {
+        Number(self.0 * other.0)
+    }
+}
+
+impl Div for Number {
+    type Output = Number ;
+    fn div(self, other: Number) -> Number  {
+        Number(self.0 / other.0)
+    }
 }
 
 
-pub const MAP_COMP_TOKEN_OP: [(TokenType, BinaryOperator); 6] = [
-    (TokenType::EQUALEQUAL, BinaryOperator::EQUALEQUAL),
-    (TokenType::BANGEQUAL, BinaryOperator::BANGEQUAL),
-    (TokenType::LESS, BinaryOperator::LESS),
-    (TokenType::LESSEQUAL, BinaryOperator::LESSEQUAL),
-    (TokenType::GREATER, BinaryOperator::GREATER),
-    (TokenType::GREATEREQUAL, BinaryOperator::GREATEREQUAL),
-];
+impl ValueObjTrait for Str {
+    fn as_str(&self) -> Option<&Str> {
+        Some(self)
+    }
+}
 
-pub const MAP_SLASH_STAR_OP:  [(TokenType, BinaryOperator); 2] = [
-    (TokenType::SLASH, BinaryOperator::SLASH),
-    (TokenType::STAR, BinaryOperator::STAR),
-];
+impl ValueObjTrait for Number {
+    fn as_number(&self) -> Option<&Number> {
+        Some(self)
+    }
+}
 
-pub const MAP_PLUS_MINUS_OP:  [(TokenType, BinaryOperator); 2] = [
-    (TokenType::PLUS, BinaryOperator::PLUS),
-    (TokenType::MINUS, BinaryOperator::MINUS),
-];
+impl ValueObjTrait for Bool {
+    fn as_bool(&self) -> Option<&Bool> {
+        Some(self)
+    }
+}
 
-pub fn binary_op_map() -> HashMap<BinaryOperator, &'static str> {
-    HashMap::from([
-        (BinaryOperator::EQUALEQUAL, "=="),
-        (BinaryOperator::BANGEQUAL, "!="),
-        (BinaryOperator::LESS, "<"),
-        (BinaryOperator::LESSEQUAL, "<="),
-        (BinaryOperator::GREATER, ">"),
-        (BinaryOperator::GREATEREQUAL, ">="),
-        (BinaryOperator::PLUS, "+"),
-        (BinaryOperator::MINUS, "-"),
-        (BinaryOperator::SLASH, "/"),
-        (BinaryOperator::STAR, "*"),
-    ])
+impl ValueObjTrait for NIL  {
+    fn as_nil(&self) -> Option<&NIL> {
+        Some(&self)
+    }
 }

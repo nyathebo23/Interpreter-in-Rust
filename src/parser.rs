@@ -1,9 +1,12 @@
 use std::process;
 use crate::error_handler::{handle_error, ErrorType};
-use crate::parser::declarations::{BasicType, UnaryOperator, MAP_COMP_TOKEN_OP, MAP_PLUS_MINUS_OP, MAP_SLASH_STAR_OP};
+use crate::parser::declarations::{Bool, Number, Str, NIL};
+use crate::parser::operators_decl::{UnaryOperator, MAP_COMP_TOKEN_OP, MAP_PLUS_MINUS_OP, MAP_SLASH_STAR_OP};
 use crate::scanner::declarations::*;
 mod declarations;
 mod expressions;
+mod utils;
+mod operators_decl;
 
 use crate::parser::expressions::*;
 
@@ -103,15 +106,15 @@ fn non_binary_expr(tokens_list: &Vec<Token>, mut index: &mut usize, size_list: u
         },
         TokenType::STRING => {
             let token_str = token.literal.clone().unwrap();
-            Box::new(LiteralExpr { value: BasicType::STRING(token_str)})
+            Box::new(LiteralExpr { value: Box::new(Str(token_str)) })
         },
         TokenType::NUMBER => {
             let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-            Box::new(LiteralExpr { value: BasicType::NUMBER(number)})
+            Box::new(LiteralExpr { value: Box::new(Number(number)) })
         },
-        TokenType::NIL => Box::new(LiteralExpr { value: BasicType::NIL}),
-        TokenType::TRUE => Box::new(LiteralExpr { value: BasicType::BOOLEAN(true)}),
-        TokenType::FALSE => Box::new(LiteralExpr { value: BasicType::BOOLEAN(false)}), 
+        TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL)}),
+        TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),
+        TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)) }), 
         TokenType::MINUS => {
             *index += 1;
             let child_expr = non_binary_expr(&tokens_list, &mut index, size_list); 
