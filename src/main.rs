@@ -4,6 +4,7 @@ use std::io::{self, Write};
 use std::process;
 
 use crate::compile_session::CompileSession;
+use crate::error_handler::LEXICAL_ERROR_CODE;
 use crate::parser::Parser;
 use crate::scanner::display_token;
 use crate::scanner::tokenize;
@@ -33,7 +34,7 @@ fn main() {
             display_token(tokens);
             println!("EOF  null"); 
             if errors {
-                process::exit(65);
+                process::exit(LEXICAL_ERROR_CODE);
             }
         } ,
         "parse" => {
@@ -41,7 +42,7 @@ fn main() {
             let mut errors = false;
             let tokens = tokenize(file_contents, &mut errors);
             if errors {
-                process::exit(65);
+                process::exit(LEXICAL_ERROR_CODE);
             }
             let mut parser = Parser::new(&tokens, tokens.len(), 0);
             let express = parser.expression();
@@ -53,6 +54,9 @@ fn main() {
             let mut errors = false;
 
             let tokens = tokenize(file_contents, &mut errors);
+            if errors {
+                process::exit(LEXICAL_ERROR_CODE);
+            }
             let mut parser = Parser::new(&tokens, tokens.len(), 0);
             let express = parser.expression();
             let result = express.evaluate();
@@ -63,6 +67,9 @@ fn main() {
             let mut errors = false;
 
             let tokens = tokenize(file_contents, &mut errors);
+            if errors {
+                process::exit(LEXICAL_ERROR_CODE);
+            }
             let parser = Parser::new(&tokens, tokens.len(), 0);
             let mut session = CompileSession::new(parser);
             session.run();

@@ -6,6 +6,11 @@ pub enum ErrorType {
     RuntimeError
 }
 
+pub const RUNTIME_ERROR_CODE: i32 = 70;
+pub const SYNTAXIC_ERROR_CODE: i32 = 65;
+pub const LEXICAL_ERROR_CODE: i32 = 65;
+
+
 pub fn handle_error(line: &u32, error_type: ErrorType, error_text: &str) {
     let mut stderr = stderr();
     match error_type {

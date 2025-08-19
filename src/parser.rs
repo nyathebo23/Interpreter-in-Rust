@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::process;
-use crate::error_handler::{handle_error, ErrorType};
+use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE, SYNTAXIC_ERROR_CODE};
 use crate::parser::declarations::{Bool, Number, Object, Str, NIL};
 use crate::parser::operators_decl::{UnaryOperator, MAP_COMP_TOKEN_OP, MAP_PLUS_MINUS_OP, MAP_SLASH_STAR_OP};
 use crate::scanner::declarations::*;
@@ -133,7 +133,7 @@ impl Parser<'_> {
                     None => {
                         handle_error(&token.line, ErrorType::RuntimeError, 
                             format!("Undefined variable '{}'.", token.lexeme).as_str());
-                        process::exit(70);
+                        process::exit(RUNTIME_ERROR_CODE);
                     }
                 } 
             },
@@ -149,7 +149,7 @@ impl Parser<'_> {
             _ => {
                 handle_error(&token.line, ErrorType::SyntacticError, 
                     format!("Error at {0}: Expect expression.", token.lexeme).as_str());
-                process::exit(65);
+                process::exit(SYNTAXIC_ERROR_CODE);
             }
         };
         self.next();
@@ -162,7 +162,7 @@ impl Parser<'_> {
 
     fn exit_error(&self, line: &u32, text: &str) {
         handle_error(line, ErrorType::SyntacticError, text);
-        process::exit(65);  
+        process::exit(SYNTAXIC_ERROR_CODE);  
     }
 
     pub fn next(&mut self) {

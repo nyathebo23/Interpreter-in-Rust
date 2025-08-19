@@ -1,6 +1,6 @@
 use std::process;
 
-use crate::error_handler::{handle_error, ErrorType};
+use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
 use crate::parser::declarations::{Bool, Number, Object, Type};
 
 pub fn perform_comparison<F>(data1: Box<dyn Object>, data2: Box<dyn Object>, f: F, line: &u32) -> Box<dyn Object>  
@@ -14,7 +14,7 @@ where F: Fn(f64, f64) -> bool
         },
         _ => {
             handle_error(line, ErrorType::RuntimeError, "Operand must be a number.");
-            process::exit(70);
+            process::exit(RUNTIME_ERROR_CODE);
         }
     }
 }
@@ -30,7 +30,7 @@ where F: Fn(f64, f64) -> f64
         },
         _ => {
             handle_error(line, ErrorType::RuntimeError, "Operand must be a number.");
-            process::exit(70);
+            process::exit(RUNTIME_ERROR_CODE);
         }
     }
 }
@@ -50,7 +50,7 @@ pub fn perform_add(data1: Box<dyn Object>, data2: Box<dyn Object>, line: &u32) -
         },
         _ => {
             handle_error(line, ErrorType::RuntimeError, "Operands must be two numbers or two strings.");
-            process::exit(70);
+            process::exit(RUNTIME_ERROR_CODE);
         }
     }
 }
