@@ -194,7 +194,7 @@ impl Parser<'_> {
             if assignment_val {
                 self.set_variable(ident_str, ident_expr.value.dyn_clone());
             }
-            println!("{}", ident_expr.evaluate().as_number().unwrap().to_string());
+            println!("{} {}", token.lexeme, ident_expr.evaluate().as_number().unwrap().to_string());
             ident_expr
         } 
         else {
