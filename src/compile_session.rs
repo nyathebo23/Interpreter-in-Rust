@@ -1,5 +1,5 @@
 use std::{process};
-use crate::{error_handler::{handle_error, ErrorType}, parser::declarations::NIL};
+use crate::{error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE}, parser::declarations::NIL};
 use crate::scanner::declarations::{TokenType};
 use crate::parser::{Parser};
 
@@ -66,8 +66,8 @@ impl CompileSession <'_> {
         let token = self.parser.current_token();
         if token.token_type != tokentype {
             handle_error(&token.line, ErrorType::SyntacticError, 
-                format!("Error: Expect {}", lexeme).as_str());
-            process::exit(65);  
+                format!("Error at {}: Expect {}", token.lexeme, lexeme).as_str());
+            process::exit(SYNTAXIC_ERROR_CODE);  
         }  
         self.next();
     }
