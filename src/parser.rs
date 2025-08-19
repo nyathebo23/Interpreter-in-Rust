@@ -107,7 +107,6 @@ impl Parser<'_> {
         }
         
         let token = &self.tokens_list[self.current_index];
-        println!("{} ", token.lexeme);
         let expr: Box<dyn Expression>  =  match token.token_type {
             TokenType::LEFTPAREN => {
                 self.next();
