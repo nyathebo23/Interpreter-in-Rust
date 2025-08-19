@@ -128,7 +128,6 @@ impl Parser<'_> {
                 Box::new(LiteralExpr { value: Box::new(Number(number)) })
             },
             TokenType::IDENTIFIER => {
-                println!("{}", self.variables.keys().count());
                 match self.variables.get(&token.lexeme.to_string()) {
                     Some(ident) => Box::new(LiteralExpr {value: ident.dyn_clone()} ),
                     None => {

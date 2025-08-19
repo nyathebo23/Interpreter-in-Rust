@@ -38,7 +38,6 @@ impl CompileSession <'_> {
         self.next();
         let expr = self.parser.expression();
         self.consume(TokenType::SEMICOLON, ";");
-        self.next();
         let res = expr.evaluate();
         println!("{}", res.to_str());
     }
