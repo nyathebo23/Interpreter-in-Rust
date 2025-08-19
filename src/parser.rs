@@ -194,6 +194,7 @@ impl Parser<'_> {
             if assignment_val {
                 self.set_variable(ident_str, ident_expr.value.dyn_clone());
             }
+            println!("{}", ident_str);
             ident_expr
         } 
         else {
