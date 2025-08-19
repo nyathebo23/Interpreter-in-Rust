@@ -50,6 +50,7 @@ impl CompileSession <'_> {
         self.consume(TokenType::EQUAL, "=");
         let expr = self.parser.expression();
         self.parser.set_variable(identifier.lexeme.to_string(), expr.evaluate());
+        self.consume(TokenType::SEMICOLON, ";");
     }
 
     fn next(&mut self) {
