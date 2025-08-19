@@ -172,7 +172,6 @@ impl Parser<'_> {
             let mut assignment_val = false;
             let ident_expr = match var {
                 Some(ident_val) => {
-                    
                     let next_token = self.tokens_list[self.current_index + 1].clone();
                     if next_token.token_type == TokenType::EQUAL {
                         self.next();
@@ -193,6 +192,9 @@ impl Parser<'_> {
             };
             if assignment_val {
                 self.set_variable(ident_str, ident_expr.value.dyn_clone());
+            }
+            else {
+                self.next();
             }
             ident_expr
         } 
