@@ -3,15 +3,15 @@ use std::fs;
 use std::io::{self, Write};
 use std::process;
 
-use crate::parser::expression;
+use crate::compile_session::CompileSession;
+use crate::parser::Parser;
 use crate::scanner::display_token;
 use crate::scanner::tokenize;
-use crate::statements::run;
 mod scanner;
 mod error_handler;
 mod parser;
 mod tokenizer;
-mod statements;
+mod compile_session;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,9 +43,8 @@ fn main() {
             if errors {
                 process::exit(65);
             }
-            let mut index: usize = 0;
-            let tokens_len = tokens.len();
-            let express = expression(&tokens, &mut index, tokens_len);
+            let mut parser = Parser::new(&tokens, tokens.len(), 0);
+            let express = parser.expression();
             println!("{}", express.to_string());
 
         },
@@ -54,9 +53,8 @@ fn main() {
             let mut errors = false;
 
             let tokens = tokenize(file_contents, &mut errors);
-            let mut index: usize = 0;
-            let tokens_len = tokens.len();
-            let express = expression(&tokens, &mut index, tokens_len);
+            let mut parser = Parser::new(&tokens, tokens.len(), 0);
+            let express = parser.expression();
             let result = express.evaluate();
             println!("{}", result.to_str());
         },
@@ -65,11 +63,11 @@ fn main() {
             let mut errors = false;
 
             let tokens = tokenize(file_contents, &mut errors);
-            let mut index: usize = 0;
-            let tokens_len = tokens.len();
+            let parser = Parser::new(&tokens, tokens.len(), 0);
+            let mut session = CompileSession::new(parser);
+            session.run();
 
-            run(&tokens, &mut index, tokens_len);
-
+            
         },
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();

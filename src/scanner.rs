@@ -17,7 +17,6 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
 
     while index < n {
         let c = code_symbols[index];
-
         if c == '\n' {
             line += 1;
             index += 1;

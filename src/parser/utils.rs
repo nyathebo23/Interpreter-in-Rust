@@ -81,3 +81,4 @@ pub fn check_equality(data1: Box<dyn Object>, data2: Box<dyn Object>, check: boo
     };
     Box::new(boolean)
 }
+

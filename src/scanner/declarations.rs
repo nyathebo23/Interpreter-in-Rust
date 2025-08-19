@@ -43,6 +43,7 @@ pub enum TokenType {
     WHILE
 }
 
+#[derive(Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: Cow<'static, str>,
