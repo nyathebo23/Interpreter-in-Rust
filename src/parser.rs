@@ -110,32 +110,13 @@ impl Parser<'_> {
         
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
-            TokenType::IDENTIFIER => {
-                if self.run {
-                    match self.variables.get(&token.lexeme.to_string()) {
-                        Some(ident) => Box::new(LiteralExpr {value: ident.dyn_clone()} ),
-                        None => {
-                            handle_error(&token.line, ErrorType::RuntimeError, 
-                                format!("Undefined variable '{}'.", token.lexeme).as_str());
-                            process::exit(RUNTIME_ERROR_CODE);
-                        }
-                    } 
-                } 
-                else {
-                handle_error(&token.line, ErrorType::SyntacticError, 
-                        format!("Error at {0}: Expect expression.", token.lexeme).as_str());
-                    process::exit(SYNTAXIC_ERROR_CODE);
-                }
-            },
+            TokenType::IDENTIFIER => self.identifier_expr(token),
             TokenType::LEFTPAREN => {
                 self.next();
-                let child_expr = self.expression();  
                 let expr = GroupExpr {
-                    value: child_expr,
+                    value: self.expression(),
                 };
-                if self.current_index >= self.size || (&self.tokens_list[self.current_index]).token_type != TokenType::RIGHTPAREN  {
-                    self.exit_error(&self.tokens_list[self.current_index].line, "Error: Expected character ')'");
-                }
+                self.consume(TokenType::RIGHTPAREN, ")");
                 Box::new(expr)
             },
             TokenType::STRING => {
@@ -146,7 +127,7 @@ impl Parser<'_> {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
                 Box::new(LiteralExpr { value: Box::new(Number(number)) })
             },
-            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL)}),
+            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL) }),
             TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),
             TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)) }), 
             TokenType::MINUS => {
@@ -169,9 +150,54 @@ impl Parser<'_> {
         self.variables.insert(identifier , val );
     }
 
+
     fn exit_error(&self, line: &u32, text: &str) {
         handle_error(line, ErrorType::SyntacticError, text);
         process::exit(SYNTAXIC_ERROR_CODE);  
+    }
+
+    fn consume(&self, tokentype: TokenType, lexeme: &str) {
+        if self.current_index >= self.size || (&self.tokens_list[self.current_index]).token_type != tokentype  {
+            self.exit_error(&self.tokens_list[self.current_index].line, 
+                format!("Error: Expected character {}", lexeme).as_str());
+        }
+    }
+
+    fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
+        if self.run {
+            let ident_str = token.lexeme.to_string();
+            let var = self.variables.get(&ident_str);
+            let mut assignment_val = false;
+            let ident_expr = match var {
+                Some(ident_val) => {
+                    
+                    let next_token = self.tokens_list[self.current_index + 1].clone();
+                    if next_token.token_type == TokenType::EQUAL {
+                        self.next();
+                        let expr = self.expression();
+                        assignment_val = true;
+                        Box::new(LiteralExpr {value: expr.evaluate() })
+                    }
+                    else {
+                        Box::new(LiteralExpr {value: ident_val.dyn_clone()})
+                    }
+                },
+                None => {
+                    handle_error(&token.line, ErrorType::RuntimeError, 
+                        format!("Undefined variable '{}'.", token.lexeme).as_str());
+                    process::exit(RUNTIME_ERROR_CODE);
+                }
+            };
+            if assignment_val {
+                self.set_variable(ident_str, ident_expr.value.dyn_clone());
+            }
+            ident_expr
+        } 
+        else {
+        handle_error(&token.line, ErrorType::SyntacticError, 
+                format!("Error at {0}: Expect expression.", token.lexeme).as_str());
+            process::exit(SYNTAXIC_ERROR_CODE);
+        }
     }
 
     pub fn next(&mut self) {
@@ -195,7 +221,9 @@ impl Parser<'_> {
         expr
     }
 
+
     pub fn current_token(&self) -> &Token {
         &self.tokens_list[self.current_index]
     }
+    
 }
