@@ -110,7 +110,9 @@ impl Parser<'_> {
         
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
-            TokenType::IDENTIFIER => self.identifier_expr(token),
+            TokenType::IDENTIFIER => { 
+                return self.identifier_expr(token); 
+            },
             TokenType::LEFTPAREN => {
                 self.next();
                 let expr = GroupExpr {
