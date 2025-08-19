@@ -44,7 +44,7 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let mut parser = Parser::new(&tokens, tokens.len(), 0);
+            let mut parser = Parser::new(&tokens, 0, false);
             let express = parser.expression();
             println!("{}", express.to_string());
 
@@ -57,7 +57,7 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let mut parser = Parser::new(&tokens, tokens.len(), 0);
+            let mut parser = Parser::new(&tokens, 0, false);
             let express = parser.expression();
             let result = express.evaluate();
             println!("{}", result.to_str());
@@ -70,7 +70,7 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let parser = Parser::new(&tokens, tokens.len(), 0);
+            let parser = Parser::new(&tokens, 0, true);
             let mut session = CompileSession::new(parser);
             session.run();
 

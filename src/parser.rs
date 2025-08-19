@@ -14,14 +14,16 @@ pub struct Parser<'a> {
     pub tokens_list: &'a Vec<Token>,
     pub size: usize,
     pub current_index: usize, 
+    run: bool,
     variables: HashMap<String, Box<dyn Object>>
 }
 
 impl Parser<'_> {
-    pub fn new(tokens: &Vec<Token>, len: usize, index: usize) -> Parser<'_> {
+    pub fn new(tokens: &Vec<Token>, index: usize, to_run: bool) -> Parser<'_> {
         Parser {
             tokens_list: tokens,
-            size: len,
+            size: tokens.len(),
+            run: to_run,
             current_index: index,
             variables: HashMap::new()
         }
@@ -108,6 +110,23 @@ impl Parser<'_> {
         
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
+            TokenType::IDENTIFIER => {
+                if self.run {
+                    match self.variables.get(&token.lexeme.to_string()) {
+                        Some(ident) => Box::new(LiteralExpr {value: ident.dyn_clone()} ),
+                        None => {
+                            handle_error(&token.line, ErrorType::RuntimeError, 
+                                format!("Undefined variable '{}'.", token.lexeme).as_str());
+                            process::exit(RUNTIME_ERROR_CODE);
+                        }
+                    } 
+                } 
+                else {
+                handle_error(&token.line, ErrorType::SyntacticError, 
+                        format!("Error at {0}: Expect expression.", token.lexeme).as_str());
+                    process::exit(SYNTAXIC_ERROR_CODE);
+                }
+            },
             TokenType::LEFTPAREN => {
                 self.next();
                 let child_expr = self.expression();  
@@ -126,16 +145,6 @@ impl Parser<'_> {
             TokenType::NUMBER => {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
                 Box::new(LiteralExpr { value: Box::new(Number(number)) })
-            },
-            TokenType::IDENTIFIER => {
-                match self.variables.get(&token.lexeme.to_string()) {
-                    Some(ident) => Box::new(LiteralExpr {value: ident.dyn_clone()} ),
-                    None => {
-                        handle_error(&token.line, ErrorType::RuntimeError, 
-                            format!("Undefined variable '{}'.", token.lexeme).as_str());
-                        process::exit(RUNTIME_ERROR_CODE);
-                    }
-                } 
             },
             TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL)}),
             TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),

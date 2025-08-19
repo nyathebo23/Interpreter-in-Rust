@@ -64,21 +64,17 @@ impl  Expression for UnaryExpr {
                 match value_evaluated.get_type() {
                     Type::BOOLEAN => {
                         let bool = value_evaluated.as_bool().unwrap();
-                        return Box::new(Bool(!bool.0));
+                        Box::new(Bool(!bool.0))
                     },
-                    Type::NIL => {
-                        return Box::new(Bool(true));
-                    },
-                    _ => {
-                        return Box::new(Bool(false));
-                    }
+                    Type::NIL => Box::new(Bool(true)),
+                    _ => Box::new(Bool(false))
                 }
             },
             UnaryOperator::MINUS => {
                 match value_evaluated.get_type() {
                     Type::NUMBER => {
                         let num = value_evaluated.as_number().unwrap();
-                        return Box::new(Number(-num.0));
+                        Box::new(Number(-num.0))
                     },
                     _ => {
                         handle_error(&self.line, ErrorType::RuntimeError, "Operand must be a number.");
