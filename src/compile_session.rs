@@ -19,11 +19,9 @@ impl CompileSession <'_> {
             let token = self.parser.current_token();
             match token.token_type {
                 TokenType::PRINT => {
-                    self.next();
                     self.print_statement();
                 },
                 TokenType::VAR => {
-                    self.next();
                     self.var_statement();
                 },
                 _ => {
@@ -37,6 +35,7 @@ impl CompileSession <'_> {
     }
 
     fn print_statement(&mut self) {
+        self.next();
         let expr = self.parser.expression();
         self.consume(TokenType::SEMICOLON, ";");
         self.next();
@@ -61,7 +60,7 @@ impl CompileSession <'_> {
         let token = self.parser.current_token();
         if token.token_type != tokentype {
             handle_error(&token.line, ErrorType::SyntacticError, 
-                format!("Error: Expected {}", lexeme).as_str());
+                format!("Error: Expect {}", lexeme).as_str());
             process::exit(65);  
         }  
         self.next();
