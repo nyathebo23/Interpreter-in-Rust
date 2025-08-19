@@ -174,6 +174,7 @@ impl Parser<'_> {
                     let next_token = self.tokens_list[self.current_index + 1].clone();
                     if next_token.token_type == TokenType::EQUAL {
                         self.next();
+                        self.next();
                         let expr = self.expression();
                         assignment_val = true;
                         Box::new(LiteralExpr {value: expr.evaluate() })
