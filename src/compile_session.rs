@@ -79,7 +79,7 @@ impl CompileSession <'_> {
                 TokenType::RIGHTBRACE => {
                     self.parser.end_block();
                     self.next();
-                    break;
+                    return;
                 },
                 _ => {
                     let expr = self.parser.expression();
