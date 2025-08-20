@@ -158,11 +158,19 @@ impl ValueObjTrait for Str {
     fn as_str(&self) -> Option<&Str> {
         Some(self)
     }
+
+    fn as_bool(&self) -> Option<&Bool> {
+        Some(&Bool(true))
+    }
 }
 
 impl ValueObjTrait for Number {
     fn as_number(&self) -> Option<&Number> {
         Some(self)
+    }
+
+    fn as_bool(&self) -> Option<&Bool> {
+        Some(&Bool(true))
     }
 }
 
@@ -172,4 +180,8 @@ impl ValueObjTrait for Bool {
     }
 }
 
-impl ValueObjTrait for NIL  {}
+impl ValueObjTrait for NIL  {
+    fn as_bool(&self) -> Option<&Bool> {
+        Some(&Bool(false))
+    }
+}

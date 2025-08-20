@@ -1,5 +1,6 @@
 
 use crate::error_handler::*;
+use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::*;
 use crate::parser::operators_decl::*;
 use crate::parser::utils::check_equality;
@@ -9,8 +10,14 @@ use crate::parser::utils::perform_num_op;
 use std::process;
 
 pub trait Expression {
-    fn evaluate(&self) -> Box<dyn Object>;
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object>;
     fn to_string(&self) -> String;
+}
+
+pub struct IdentifierExpr {
+    pub ident_name: String,
+    pub value_to_assign: Option<Box<dyn Expression>>,
+    pub line: u32
 }
 
 pub struct BinaryExpr {
@@ -28,14 +35,40 @@ pub struct UnaryExpr {
 
 pub struct LiteralExpr {
     pub value: Box<dyn Object>,
+    pub line: u32
 }
 
 pub struct GroupExpr  {
     pub value: Box<dyn Expression>,
 }
 
+impl Expression for IdentifierExpr {
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
+        let current_value = state_scope.get_variable(&self.ident_name);
+        if let Some(value) = current_value {
+            match &self.value_to_assign {
+                Some(expr_value) => {
+                    let val = expr_value.evaluate(state_scope);
+                    state_scope.modif_variable(&self.ident_name, val.dyn_clone());
+                    return val;
+                },
+                None => {
+                    return value;
+                }
+            }
+        }
+        handle_error(&self.line, ErrorType::RuntimeError, 
+            format!("Undefined variable '{}'.", self.ident_name).as_str());
+        process::exit(RUNTIME_ERROR_CODE);
+    }
+
+    fn to_string(&self) -> String {
+        self.ident_name.to_string()
+    }
+}
+
 impl Expression for LiteralExpr {
-    fn evaluate(&self) -> Box <dyn Object> {
+    fn evaluate(&self, _state_scope: &mut BlockScopes) -> Box <dyn Object> {
         return self.value.dyn_clone();
     }
 
@@ -45,8 +78,8 @@ impl Expression for LiteralExpr {
 }
 
 impl Expression for GroupExpr {
-    fn evaluate(&self) -> Box <dyn Object> {
-        return self.value.evaluate();
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box <dyn Object> {
+        return self.value.evaluate(state_scope);
     }
 
     fn to_string(&self) -> String {
@@ -57,8 +90,8 @@ impl Expression for GroupExpr {
 
 
 impl  Expression for UnaryExpr {
-    fn evaluate(&self) -> Box <dyn Object> {
-        let value_evaluated = self.value.evaluate();
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box <dyn Object> {
+        let value_evaluated = self.value.evaluate(state_scope);
         match self.operator {
             UnaryOperator::BANG => {
                 match value_evaluated.get_type() {
@@ -97,10 +130,10 @@ impl  Expression for UnaryExpr {
 
 impl  Expression for BinaryExpr {
     
-    fn evaluate(&self) -> Box<dyn Object> {
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
 
-        let val1 = self.value1.evaluate();
-        let val2 = self.value2.evaluate();
+        let val1 = self.value1.evaluate(state_scope);
+        let val2 = self.value2.evaluate(state_scope);
         match self.operator {
             BinaryOperator::PLUS => {
                 perform_add(val1, val2, &self.line)

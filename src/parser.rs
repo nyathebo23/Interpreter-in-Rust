@@ -1,15 +1,14 @@
 use std::process;
 use std::sync::Arc;
-use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE, SYNTAXIC_ERROR_CODE};
-use crate::parser::block_scopes::BlockScopes;
-use crate::parser::declarations::{Bool, Number, Object, Str, NIL};
+use crate::error_handler::{handle_error, ErrorType,  SYNTAXIC_ERROR_CODE};
+use crate::parser::declarations::{Bool, Number, Str, NIL};
 use crate::parser::operators_decl::{operators_priority_list, OpChainPriority, UnaryOperator};
 use crate::scanner::declarations::*;
 pub(crate) mod declarations;
-mod expressions;
+pub mod expressions;
 mod utils;
 mod operators_decl;
-mod block_scopes;
+pub mod block_scopes;
 use crate::parser::expressions::*;
 
 pub struct Parser<'a> {
@@ -17,28 +16,16 @@ pub struct Parser<'a> {
     pub size: usize,
     pub current_index: usize, 
     op_priority_list: Arc<OpChainPriority>,
-    run: bool,
-    scope_state: BlockScopes
 }
 
 impl Parser<'_> {
-    pub fn new(tokens: &Vec<Token>, index: usize, to_run: bool) -> Parser<'_> {
+    pub fn new(tokens: &Vec<Token>, index: usize) -> Parser<'_> {
         Parser {
             tokens_list: tokens,
             size: tokens.len(),
-            run: to_run,
             current_index: index,
             op_priority_list: operators_priority_list().into(),
-            scope_state: BlockScopes::new()
         }
-    }
-
-    pub fn init_block(&mut self) {
-        self.scope_state.start_child_block();
-    }
-
-    pub fn end_block(&mut self) {
-        self.scope_state.end_child_block();
     }
 
     fn get_expr_op_priority(&mut self, prec_expr: Box<dyn Expression>, operators_list: &OpChainPriority) -> Box<dyn Expression> {
@@ -79,7 +66,6 @@ impl Parser<'_> {
         if self.current_index >= self.size {
             self.exit_error(&self.tokens_list[self.current_index].line, "Error: Expect expression.");
         }
-        
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
             TokenType::IDENTIFIER => { 
@@ -95,15 +81,15 @@ impl Parser<'_> {
             },
             TokenType::STRING => {
                 let token_str = token.literal.clone().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Str(token_str)) })
+                Box::new(LiteralExpr { value: Box::new(Str(token_str)), line: token.line })
             },
             TokenType::NUMBER => {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Number(number)) })
+                Box::new(LiteralExpr { value: Box::new(Number(number)), line: token.line })
             },
-            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL) }),
-            TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),
-            TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)) }), 
+            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL), line: token.line }),
+            TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)), line: token.line }),
+            TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)), line: token.line }), 
             TokenType::MINUS => {
                 return self.get_unary_expr(token, UnaryOperator::MINUS);
             },
@@ -120,14 +106,6 @@ impl Parser<'_> {
         expr
     }
 
-    pub fn set_init_variable(&mut self, identifier: &String, val: Box<dyn Object>) {
-        self.scope_state.set_init_variable(identifier, val);
-    }
-
-    pub fn modif_variable(&mut self, identifier: &String, val: Box<dyn Object>) {
-        self.scope_state.modif_variable(identifier, val);
-    }
-
     fn exit_error(&self, line: &u32, text: &str) {
         handle_error(line, ErrorType::SyntacticError, text);
         process::exit(SYNTAXIC_ERROR_CODE);  
@@ -141,46 +119,33 @@ impl Parser<'_> {
     }
 
     fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
-        if self.run {
-            let ident_str = token.lexeme.to_string();
-            let var = self.scope_state.get_variable(&ident_str);
-            let mut assignment_val = false;
-            let ident_expr = match var {
-                Some(ident_val) => {
-                    if self.current_index + 1 >= self.size {
-                        handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
-                        process::exit(SYNTAXIC_ERROR_CODE)
-                    }
-                    let next_token = &self.tokens_list[self.current_index + 1];
-                    if next_token.token_type == TokenType::EQUAL {
-                        self.next();
-                        self.next();
-                        let expr = self.expression();
-                        assignment_val = true;
-                        Box::new(LiteralExpr {value: expr.evaluate() })
-                    }
-                    else {
-                        Box::new(LiteralExpr {value: ident_val.dyn_clone()})
-                    }
-                },
-                None => {
-                    handle_error(&token.line, ErrorType::RuntimeError, 
-                        format!("Undefined variable '{}'.", token.lexeme).as_str());
-                    process::exit(RUNTIME_ERROR_CODE);
+        let ident_str = token.lexeme.to_string();
+        if self.current_index + 1 >= self.size {
+            handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
+            process::exit(SYNTAXIC_ERROR_CODE)
+        }
+        let next_token = &self.tokens_list[self.current_index + 1];
+        if next_token.token_type == TokenType::EQUAL {
+            self.next();
+            self.next();
+            let expr = self.expression();
+            return Box::new(
+                IdentifierExpr {
+                    ident_name: ident_str,
+                    value_to_assign: Some(expr),
+                    line: self.current_token().line
                 }
-            };
-            if assignment_val {
-                self.modif_variable(&ident_str, ident_expr.value.dyn_clone());
-            }
-            else {
-                self.next();
-            }
-            ident_expr
-        } 
+            );
+        }
         else {
-        handle_error(&token.line, ErrorType::SyntacticError, 
-                format!("Error at {0}: Expect expression.", token.lexeme).as_str());
-            process::exit(SYNTAXIC_ERROR_CODE);
+            self.next();
+            return Box::new(
+                IdentifierExpr {
+                    ident_name: ident_str,
+                    value_to_assign: None,
+                    line: token.line
+                }
+            );
         }
     }
 
@@ -206,9 +171,9 @@ impl Parser<'_> {
         expr
     }
 
-
     pub fn current_token(&self) -> &Token {
         &self.tokens_list[self.current_index]
     }
+
     
 }

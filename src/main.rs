@@ -3,8 +3,9 @@ use std::fs;
 use std::io::{self, Write};
 use std::process;
 
-use crate::compile_session::CompileSession;
 use crate::error_handler::LEXICAL_ERROR_CODE;
+use crate::interpreter::Interpreter;
+use crate::parser::block_scopes::BlockScopes;
 use crate::parser::Parser;
 use crate::scanner::display_token;
 use crate::scanner::tokenize;
@@ -12,7 +13,8 @@ mod scanner;
 mod error_handler;
 mod parser;
 mod tokenizer;
-mod compile_session;
+mod statements;
+mod interpreter;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -44,7 +46,7 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let mut parser = Parser::new(&tokens, 0, false);
+            let mut parser = Parser::new(&tokens, 0);
             let express = parser.expression();
             println!("{}", express.to_string());
 
@@ -57,9 +59,11 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let mut parser = Parser::new(&tokens, 0, false);
+            let mut parser = Parser::new(&tokens, 0);
             let express = parser.expression();
-            let result = express.evaluate();
+            let mut scope: BlockScopes = BlockScopes::new();
+            
+            let result = express.evaluate(&mut scope);
             println!("{}", result.to_str());
         },
         "run" => {
@@ -70,9 +74,9 @@ fn main() {
             if errors {
                 process::exit(LEXICAL_ERROR_CODE);
             }
-            let parser = Parser::new(&tokens, 0, true);
-            let mut session = CompileSession::new(parser);
-            session.run();
+            let parser = Parser::new(&tokens, 0);
+            let mut interpreter = Interpreter::new(parser);
+            interpreter.run();
 
             
         },
