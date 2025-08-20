@@ -78,6 +78,7 @@ impl CompileSession <'_> {
                 },
                 TokenType::RIGHTBRACE => {
                     self.parser.end_block();
+                    self.next();
                     break;
                 },
                 _ => {
