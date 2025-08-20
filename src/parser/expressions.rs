@@ -35,7 +35,6 @@ pub struct UnaryExpr {
 
 pub struct LiteralExpr {
     pub value: Box<dyn Object>,
-    pub line: u32
 }
 
 pub struct GroupExpr  {

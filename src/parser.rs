@@ -81,15 +81,15 @@ impl Parser<'_> {
             },
             TokenType::STRING => {
                 let token_str = token.literal.clone().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Str(token_str)), line: token.line })
+                Box::new(LiteralExpr { value: Box::new(Str(token_str)) })
             },
             TokenType::NUMBER => {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Number(number)), line: token.line })
+                Box::new(LiteralExpr { value: Box::new(Number(number)) })
             },
-            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL), line: token.line }),
-            TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)), line: token.line }),
-            TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)), line: token.line }), 
+            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL) }),
+            TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),
+            TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)) }), 
             TokenType::MINUS => {
                 return self.get_unary_expr(token, UnaryOperator::MINUS);
             },

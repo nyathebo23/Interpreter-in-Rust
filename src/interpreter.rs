@@ -42,7 +42,6 @@ impl Interpreter<'_> {
         let identifier_str = identifier.lexeme.to_string();
         self.consume(TokenType::IDENTIFIER, "identifier");
         let token = self.parser.current_token();
-        let line = token.line;
         if token.token_type == TokenType::EQUAL {
             self.next();
             let expr = self.parser.expression();
@@ -56,7 +55,7 @@ impl Interpreter<'_> {
             self.consume(TokenType::SEMICOLON, ";"); 
             return VarStatement {
                 name: identifier_str,
-                expression: Box::new(LiteralExpr { value:Box::new(NIL), line })
+                expression: Box::new(LiteralExpr { value:Box::new(NIL) })
             };
         }
     }
