@@ -1,21 +1,24 @@
-use std::collections::HashMap;
 use std::process;
+use std::sync::Arc;
 use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE, SYNTAXIC_ERROR_CODE};
+use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Bool, Number, Object, Str, NIL};
-use crate::parser::operators_decl::{UnaryOperator, MAP_COMP_TOKEN_OP, MAP_PLUS_MINUS_OP, MAP_SLASH_STAR_OP};
+use crate::parser::operators_decl::{operators_priority_list, OpChainPriority, UnaryOperator};
 use crate::scanner::declarations::*;
 pub(crate) mod declarations;
 mod expressions;
 mod utils;
 mod operators_decl;
+mod block_scopes;
 use crate::parser::expressions::*;
 
 pub struct Parser<'a> {
     pub tokens_list: &'a Vec<Token>,
     pub size: usize,
     pub current_index: usize, 
+    op_priority_list: Arc<OpChainPriority>,
     run: bool,
-    variables: HashMap<String, Box<dyn Object>>
+    scope_state: BlockScopes
 }
 
 impl Parser<'_> {
@@ -25,83 +28,52 @@ impl Parser<'_> {
             size: tokens.len(),
             run: to_run,
             current_index: index,
-            variables: HashMap::new()
+            op_priority_list: operators_priority_list().into(),
+            scope_state: BlockScopes::new()
         }
     }
 
-    fn expr_comp_precedence(&mut self, prec_expr: Box<dyn Expression>) -> Box<dyn Expression> 
-    {
-        let mut left_expr = prec_expr;
-        left_expr = self.expr_plus_minus_precedence(left_expr);
-        'outer: while self.current_index < self.size {
-            let current_token = &self.tokens_list[self.current_index];
-            for (token_type, token_op) in MAP_COMP_TOKEN_OP {
-                if token_type == current_token.token_type {
-                    self.next();
-                    let right_expr0 = self.non_binary_expr();
-                    let right_expr = self.expr_plus_minus_precedence(right_expr0);
-                    left_expr = Box::new(BinaryExpr {
-                        operator: token_op,
-                        value1: left_expr,
-                        value2: right_expr,
-                        line: current_token.line
-                    });
-                    continue 'outer;
+    pub fn init_block(&mut self) {
+        self.scope_state.start_child_block();
+    }
+
+    pub fn end_block(&mut self) {
+        self.scope_state.end_child_block();
+    }
+
+    fn get_expr_op_priority(&mut self, prec_expr: Box<dyn Expression>, operators_list: &OpChainPriority) -> Box<dyn Expression> {
+        match operators_list {
+            OpChainPriority::Cons(map_operators, next_map) => {
+                let mut left_expr = prec_expr;
+                left_expr = self.get_expr_op_priority(left_expr, next_map);
+                'outer: while self.current_index < self.size {
+                    let current_token = &self.tokens_list[self.current_index];
+                    for (token_type, token_op) in map_operators.iter() {
+                        if *token_type == current_token.token_type {
+                            self.next();
+                            let right_expr0 = self.non_binary_expr();
+                            let right_expr = self.get_expr_op_priority(right_expr0, next_map);
+                            left_expr = Box::new(BinaryExpr {
+                                operator: *token_op,
+                                value1: left_expr,
+                                value2: right_expr,
+                                line: current_token.line
+                            });
+                            continue 'outer;
+                        }
+                    }
+                    break;
                 }
+                left_expr 
+            },
+            OpChainPriority::Nil => {
+                prec_expr
             }
-            break;
         }
-        left_expr
+       
     }
 
-    fn expr_plus_minus_precedence(&mut self, prec_expr: Box<dyn Expression>) -> Box<dyn Expression> 
-    {
-        let mut left_expr = prec_expr;
-        left_expr = self.expr_star_slash_precedence(left_expr);
-        'outer: while self.current_index < self.size {
-            let current_token = &self.tokens_list[self.current_index];
-            for (token_type, token_op) in MAP_PLUS_MINUS_OP {
-                if token_type == current_token.token_type {
-                    self.next();
-                    let right_expr0 = self.non_binary_expr();
-                    let right_expr = self.expr_star_slash_precedence(right_expr0);
-                    left_expr = Box::new(BinaryExpr {
-                        operator: token_op,
-                        value1: left_expr,
-                        value2: right_expr,
-                        line: current_token.line
-                    });
-                    continue 'outer;
-                }
-            }
-            break;
-        }    
-        left_expr
-    }
-
-    fn expr_star_slash_precedence(&mut self, prec_expr: Box<dyn Expression>) -> Box<dyn Expression>
-    {
-        let mut left_expr = prec_expr;
-        'outer: while  self.current_index < self.size {
-            let current_token = &self.tokens_list[self.current_index];
-            for (token_type, token_op) in MAP_SLASH_STAR_OP {
-                if token_type == current_token.token_type {
-                    self.next();
-                    let right_expr = self.non_binary_expr();
-                    left_expr = Box::new(BinaryExpr {
-                        operator: token_op,
-                        value1: left_expr,
-                        value2: right_expr,
-                        line: current_token.line
-                    });
-                    continue 'outer;
-                }
-            }
-            break;
-        }    
-        left_expr
-    }
-
+    
     fn non_binary_expr(&mut self) -> Box<dyn Expression> 
     {
         if self.current_index >= self.size {
@@ -148,10 +120,13 @@ impl Parser<'_> {
         expr
     }
 
-    pub fn set_variable(&mut self, identifier: String, val: Box<dyn Object>) {
-        self.variables.insert(identifier , val );
+    pub fn set_init_variable(&mut self, identifier: &String, val: Box<dyn Object>) {
+        self.scope_state.set_init_variable(identifier, val);
     }
 
+    pub fn modif_variable(&mut self, identifier: &String, val: Box<dyn Object>) {
+        self.scope_state.modif_variable(identifier, val);
+    }
 
     fn exit_error(&self, line: &u32, text: &str) {
         handle_error(line, ErrorType::SyntacticError, text);
@@ -168,11 +143,15 @@ impl Parser<'_> {
     fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
         if self.run {
             let ident_str = token.lexeme.to_string();
-            let var = self.variables.get(&ident_str);
+            let var = self.scope_state.get_variable(&ident_str);
             let mut assignment_val = false;
             let ident_expr = match var {
                 Some(ident_val) => {
-                    let next_token = self.tokens_list[self.current_index + 1].clone();
+                    if self.current_index + 1 >= self.size {
+                        handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
+                        process::exit(SYNTAXIC_ERROR_CODE)
+                    }
+                    let next_token = &self.tokens_list[self.current_index + 1];
                     if next_token.token_type == TokenType::EQUAL {
                         self.next();
                         self.next();
@@ -191,7 +170,7 @@ impl Parser<'_> {
                 }
             };
             if assignment_val {
-                self.set_variable(ident_str, ident_expr.value.dyn_clone());
+                self.modif_variable(&ident_str, ident_expr.value.dyn_clone());
             }
             else {
                 self.next();
@@ -222,7 +201,8 @@ impl Parser<'_> {
 
     pub fn expression(&mut self) -> Box<dyn Expression> {
         let start_expr = self.non_binary_expr();
-        let expr = self.expr_comp_precedence(start_expr);
+        let op_prior_list = self.op_priority_list.clone();
+        let expr = self.get_expr_op_priority(start_expr, &op_prior_list);
         expr
     }
 

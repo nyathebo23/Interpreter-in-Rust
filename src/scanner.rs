@@ -189,7 +189,7 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         Ok(ident) => {
                             match keywordsmap.get(ident.as_str()) {
                                 Some(token_type) => token_list.push(
-                                    Token { token_type: token_type.clone(),
+                                    Token { token_type: *token_type,
                                     lexeme: Cow::Owned(ident), literal: None, line }
                                 ),
                                 None => token_list.push(

@@ -24,6 +24,9 @@ impl CompileSession <'_> {
                 TokenType::VAR => {
                     self.var_statement();
                 },
+                TokenType::LEFTBRACE => {
+                    self.block();
+                },
                 _ => {
                     let expr = self.parser.expression();
                     self.consume(TokenType::SEMICOLON, ";");
@@ -31,7 +34,6 @@ impl CompileSession <'_> {
                 } 
             } 
         }
-
     }
 
     fn print_statement(&mut self) {
@@ -44,18 +46,47 @@ impl CompileSession <'_> {
 
     fn var_statement(&mut self) {
         self.next();
-        let identifier = self.parser.current_token().clone();
+        let identifier = self.parser.current_token();
+        let identifier_str = identifier.lexeme.to_string();
         self.consume(TokenType::IDENTIFIER, "identifier");
         let token = self.parser.current_token();
         if token.token_type == TokenType::EQUAL {
             self.next();
             let expr = self.parser.expression();
-            self.parser.set_variable(identifier.lexeme.to_string(), expr.evaluate());
+            self.parser.set_init_variable(&identifier_str, expr.evaluate());
         }
         else {
-            self.parser.set_variable(identifier.lexeme.to_string(), Box::new(NIL));
+            self.parser.set_init_variable(&identifier_str, Box::new(NIL));
         }
         self.consume(TokenType::SEMICOLON, ";"); 
+    }
+
+    fn block(&mut self) {
+        self.next();
+        self.parser.init_block();
+        while self.parser.current_index < self.parser.size {
+            let token = self.parser.current_token();
+            match token.token_type {
+                TokenType::VAR => {
+                    self.var_statement();
+                },
+                TokenType::PRINT => {
+                    self.print_statement();
+                },
+                TokenType::LEFTBRACE => {
+                    self.block();
+                },
+                TokenType::RIGHTBRACE => {
+                    self.parser.end_block();
+                    break;
+                },
+                _ => {
+                    let expr = self.parser.expression();
+                    self.consume(TokenType::SEMICOLON, ";");
+                    expr.evaluate();
+                } 
+            } 
+        }
     }
 
     fn next(&mut self) {

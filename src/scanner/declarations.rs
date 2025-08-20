@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 
-#[derive(Hash, Eq, PartialEq, Clone)]
+#[derive(Hash, Eq, PartialEq, Clone, Copy)]
 pub enum TokenType {
     LEFTPAREN,
     RIGHTPAREN ,    

@@ -132,6 +132,7 @@ impl  Expression for BinaryExpr {
             BinaryOperator::LESSEQUAL => {
                 perform_comparison(val1, val2, |x, y| x <= y, &self.line)                
             },
+            _ => Box::new(NIL)
         }
     }
 
