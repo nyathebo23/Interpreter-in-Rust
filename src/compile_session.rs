@@ -88,6 +88,11 @@ impl CompileSession <'_> {
                 } 
             } 
         }
+        self.parser.current_index -= 1;
+        let last_token = self.parser.current_token();
+        handle_error(&last_token.line, ErrorType::SyntacticError, 
+            format!("Error at {}: Expect '}}'", last_token.lexeme).as_str());
+        process::exit(SYNTAXIC_ERROR_CODE);  
     }
 
     fn next(&mut self) {
