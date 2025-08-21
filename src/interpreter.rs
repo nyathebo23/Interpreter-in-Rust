@@ -152,9 +152,8 @@ impl Interpreter<'_> {
                 );
                 continue;
             }
-            else if new_token.token_type == TokenType::LEFTBRACE {
-                let new_token_copy = new_token.clone();
-                let else_stmt = self.statement(&new_token_copy);
+            else {
+                let else_stmt = self.statement(&new_token);
                 return IfStatement {
                     condition: cond_expr,
                     body: if_body,
