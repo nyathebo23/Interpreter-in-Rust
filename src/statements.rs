@@ -44,9 +44,11 @@ pub struct BlockStatement {
 
 impl Statement for BlockStatement  {
     fn run(&self, state: &mut BlockScopes) {
+        state.start_child_block();
         for stmt in self.statements.iter() {
             stmt.run(state);
         }
+        state.end_child_block();
     }
 }
 

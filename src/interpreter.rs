@@ -63,7 +63,6 @@ impl Interpreter<'_> {
     fn block_scope(&mut self) -> BlockStatement {
         let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
         self.next();
-        self.state.start_child_block();
         while self.parser.current_index < self.parser.size {
             let token = self.parser.current_token();
             match token.token_type {
@@ -78,7 +77,6 @@ impl Interpreter<'_> {
                 },
                 TokenType::RIGHTBRACE => {
                     self.next();
-                    self.state.end_child_block();
                     return BlockStatement {
                         statements: stmts
                     };

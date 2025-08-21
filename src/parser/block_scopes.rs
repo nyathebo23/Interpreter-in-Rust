@@ -18,6 +18,8 @@ impl BlockScopes {
     }
 
     pub fn start_child_block(&mut self) {
+        if self.depth > 0 { println!("{}", self.depth) };
+
         self.vars_nodes_map.push(HashMap::new());
         self.depth += 1;
     }
@@ -28,7 +30,6 @@ impl BlockScopes {
     }
 
     pub fn set_init_variable(&mut self, identifier: &String, value: Box<dyn Object>) {
-        if self.depth > 0 { println!("{}", self.depth) };
         match self.vars_nodes_map.get_mut(self.depth) {
             Some(node_map) => {
                 node_map.insert(identifier.to_string(), value);
