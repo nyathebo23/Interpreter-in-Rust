@@ -1,4 +1,4 @@
-use crate::parser::{block_scopes::BlockScopes, expressions::Expression};
+use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
 
 
 pub trait Statement {
@@ -63,6 +63,13 @@ impl Statement for PartIfStatement {
     }
 }
 
+fn get_condition(cond_option: Box<dyn Object>) -> bool {
+    match cond_option.as_bool() {
+        Some(cond) => cond.0,
+        None => false
+    }
+}
+
 pub struct IfStatement {
     pub condition: Box<dyn Expression>,
     pub body: Box<dyn Statement>,
@@ -72,22 +79,15 @@ pub struct IfStatement {
 
 impl Statement for IfStatement  {
     fn run(&self, state: &mut BlockScopes) {
-        let condition_option = self.condition.evaluate(state);
-        let condition =  match condition_option.as_bool() {
-            Some(cond) => cond.0,
-            None => false
-        };
+    
+        let condition = get_condition(self.condition.evaluate(state));
         if condition {
             self.body.run(state);
         }
         else {
             
             for stmt in self.else_if_options.iter() {
-                let condition_option = stmt.condition.evaluate(state);
-                let condition =  match condition_option.as_bool() {
-                    Some(cond) => cond.0,
-                    None => false
-                }; 
+                let condition = get_condition(stmt.condition.evaluate(state));
                 if condition {
                     stmt.run(state);
                     return;
@@ -98,5 +98,48 @@ impl Statement for IfStatement  {
                 else_stmt.run(state);
             }
         }
+    }
+}
+
+pub struct WhileStatement {
+    pub condition: Box<dyn Expression>,
+    pub body: Box<dyn Statement>, 
+}
+
+impl Statement for WhileStatement  {
+    fn run(&self, state: &mut BlockScopes) {
+        let mut condition = get_condition(self.condition.evaluate(state));
+        while condition {
+            self.body.run(state);
+            condition = get_condition(self.condition.evaluate(state));
+        }        
+    }
+}
+
+
+pub struct ForStatement {
+    pub init_declaration: Option<VarStatement>,
+    pub init_assignation: Option<ExprStatement>,
+    pub condition: Box<dyn Expression>,
+    pub body: Box<dyn Statement>, 
+    pub last_instruction: Option<Box<dyn Expression>>
+}
+
+impl Statement for ForStatement  {
+    fn run(&self, state: &mut BlockScopes) {
+        if let Some(init_decl) = &self.init_declaration {
+            init_decl.run(state);
+        }
+        else if let Some(init_assign) = &self.init_assignation {
+            init_assign.run(state);
+        }
+        let mut for_condition = get_condition(self.condition.evaluate(state));
+        while for_condition {
+            self.body.run(state);
+            if let Some(last_instruction) = &self.last_instruction {
+                last_instruction.evaluate(state);
+            }
+            for_condition = get_condition(self.condition.evaluate(state));
+        }        
     }
 }

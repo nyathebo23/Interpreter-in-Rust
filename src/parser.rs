@@ -76,7 +76,7 @@ impl Parser<'_> {
                 let expr = GroupExpr {
                     value: self.expression(),
                 };
-                self.consume(TokenType::RIGHTPAREN, ")");
+                self.check_token(TokenType::RIGHTPAREN, ")");
                 Box::new(expr)
             },
             TokenType::STRING => {
@@ -111,7 +111,7 @@ impl Parser<'_> {
         process::exit(SYNTAXIC_ERROR_CODE);  
     }
 
-    fn consume(&self, tokentype: TokenType, lexeme: &str) {
+    fn check_token(&self, tokentype: TokenType, lexeme: &str) {
         if self.current_index >= self.size || (&self.tokens_list[self.current_index]).token_type != tokentype  {
             self.exit_error(&self.tokens_list[self.current_index].line, 
                 format!("Error: Expected character {}", lexeme).as_str());
