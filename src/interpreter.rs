@@ -153,8 +153,9 @@ impl Interpreter<'_> {
                 );
                 if self.parser.current_index < self.parser.size {
                     new_token = self.parser.current_token().clone();
+                    continue;
                 }
-                continue;
+                break;
             }
             else {
                 let else_stmt = self.statement(&new_token);
