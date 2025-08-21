@@ -61,6 +61,12 @@ impl Interpreter<'_> {
         }
     }
 
+    fn expr_statement(&mut self) -> ExprStatement {
+        let expr = self.parser.expression();
+        self.check_token(TokenType::SEMICOLON, ";");
+        ExprStatement {expression: expr }
+    }
+
     fn block_scope(&mut self) -> BlockStatement {
         let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
         self.next();
@@ -92,9 +98,7 @@ impl Interpreter<'_> {
                     stmts.push(Box::new(self.for_statement()));
                 },
                 _ => {
-                    let expr = self.parser.expression();
-                    self.check_token(TokenType::SEMICOLON, ";");
-                    stmts.push(Box::new(ExprStatement {expression: expr }));
+                    stmts.push(Box::new(self.expr_statement()));
                 } 
             } 
         }
@@ -128,9 +132,7 @@ impl Interpreter<'_> {
                 Box::new(self.for_statement())
             },
             _ => {
-                let expr = self.parser.expression();
-                self.check_token(TokenType::SEMICOLON, ";");
-                Box::new(ExprStatement {expression: expr })
+                Box::new(self.expr_statement())
             } 
         } 
     }
@@ -158,9 +160,7 @@ impl Interpreter<'_> {
                 Box::new(self.for_statement())
             },
             _ => {
-                let expr = self.parser.expression();
-                self.check_token(TokenType::SEMICOLON, ";");
-                Box::new(ExprStatement {expression: expr })
+                Box::new(self.expr_statement())
             } 
         } 
     }
