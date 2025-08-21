@@ -126,6 +126,14 @@ impl Interpreter<'_> {
         let cond_expr = self.parser.expression();
         let token = self.parser.current_token().clone();
         let if_body = self.statement(&token);
+        if self.parser.current_index == self.parser.size {
+            return IfStatement {
+                condition: cond_expr,
+                body: if_body,
+                else_if_options: Vec::new(),
+                else_statement: None
+            };  
+        }
         let mut new_token = self.parser.current_token().clone();
         let mut elif_stmts: Vec<PartIfStatement> = Vec::new();
         while new_token.token_type == TokenType::ELSE {
