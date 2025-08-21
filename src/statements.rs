@@ -59,14 +59,7 @@ pub struct PartIfStatement {
 
 impl Statement for PartIfStatement {
     fn run(&self, state: &mut BlockScopes) {
-        let condition_option = self.condition.evaluate(state);
-        let condition =  match condition_option.as_bool() {
-            Some(cond) => cond.0,
-            None => false
-        };
-        if condition {
-            self.body.run(state);
-        }
+        self.body.run(state);
     }
 }
 
@@ -90,7 +83,15 @@ impl Statement for IfStatement  {
         else {
             
             for stmt in self.else_if_options.iter() {
-                stmt.run(state);
+                let condition_option = stmt.condition.evaluate(state);
+                let condition =  match condition_option.as_bool() {
+                    Some(cond) => cond.0,
+                    None => false
+                }; 
+                if condition {
+                    stmt.run(state);
+                    return;
+                }               
             }
 
             if let Some(else_stmt) = &self.else_statement {
