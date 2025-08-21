@@ -88,6 +88,7 @@ impl Statement for IfStatement  {
             self.body.run(state);
         }
         else {
+            
             for stmt in self.else_if_options.iter() {
                 stmt.run(state);
             }
