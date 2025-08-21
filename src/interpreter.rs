@@ -141,6 +141,7 @@ impl Interpreter<'_> {
             new_token = self.parser.current_token().clone();
 
             if new_token.token_type == TokenType::IF {
+                self.next();
                 let sub_if_cond = self.parser.expression();
                 let next_token = self.parser.current_token().clone();
                 let sub_if_body = self.statement(&next_token);
@@ -150,6 +151,9 @@ impl Interpreter<'_> {
                         body: sub_if_body
                     }
                 );
+                if self.parser.current_index < self.parser.size {
+                    new_token = self.parser.current_token().clone();
+                }
                 continue;
             }
             else {
