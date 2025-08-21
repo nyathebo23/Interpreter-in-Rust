@@ -82,3 +82,22 @@ pub fn check_equality(data1: Box<dyn Object>, data2: Box<dyn Object>, check: boo
     Box::new(boolean)
 }
 
+pub fn or(data1: Box<dyn Object>, data2: Box<dyn Object>, _line: &u32) -> Box<dyn Object> 
+{
+    if let Some(boolean) = data1.as_bool() {
+        if boolean.0 {
+            return data1;
+        }
+    }
+    data2
+}
+
+pub fn and(data1: Box<dyn Object>, data2: Box<dyn Object>, _line: &u32) -> Box<dyn Object> 
+{
+    if let Some(boolean) = data1.as_bool()   {
+        if !boolean.0 {
+            return data1
+        }
+    }
+    data2
+}

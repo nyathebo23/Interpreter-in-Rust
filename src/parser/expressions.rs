@@ -3,7 +3,9 @@ use crate::error_handler::*;
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::*;
 use crate::parser::operators_decl::*;
+use crate::parser::utils::and;
 use crate::parser::utils::check_equality;
+use crate::parser::utils::or;
 use crate::parser::utils::perform_add;
 use crate::parser::utils::perform_comparison;
 use crate::parser::utils::perform_num_op;
@@ -164,7 +166,12 @@ impl  Expression for BinaryExpr {
             BinaryOperator::LESSEQUAL => {
                 perform_comparison(val1, val2, |x, y| x <= y, &self.line)                
             },
-            _ => Box::new(NIL)
+            BinaryOperator::OR => {
+                or(val1, val2, &self.line)
+            },
+            BinaryOperator::AND => {
+                and(val1, val2, &self.line)
+            }        
         }
     }
 
