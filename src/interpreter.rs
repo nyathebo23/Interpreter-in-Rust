@@ -238,9 +238,10 @@ impl Interpreter<'_> {
             var_decl = Some(self.var_statement());
         }
         else if token.token_type == TokenType::IDENTIFIER {
-            assign_decl = Some(ExprStatement {expression: self.parser.expression()})
+            assign_decl = Some(ExprStatement {expression: self.parser.expression()});
+            self.check_token(TokenType::SEMICOLON, ";");
         }
-        self.check_token(TokenType::SEMICOLON, ";");
+        
         let mut condition: Box<dyn Expression> = Box::new(LiteralExpr{ value: Box::new(Bool(true)) }); 
         if self.parser.current_token().token_type != TokenType::SEMICOLON {
             condition = self.parser.expression();
@@ -269,7 +270,7 @@ impl Interpreter<'_> {
         let token = self.parser.current_token();
         if token.token_type != tokentype {
             handle_error(&token.line, ErrorType::SyntacticError, 
-                format!("Error at {}: Expect {}", token.lexeme, lexeme).as_str());
+                format!("Error at '{}': Expect {}", token.lexeme, lexeme).as_str());
             process::exit(SYNTAXIC_ERROR_CODE);  
         }  
         self.next();
