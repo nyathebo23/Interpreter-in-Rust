@@ -18,8 +18,6 @@ impl BlockScopes {
     }
 
     pub fn start_child_block(&mut self) {
-        if self.depth > 0 { println!("{}", self.depth) };
-
         self.vars_nodes_map.push(HashMap::new());
         self.depth += 1;
     }
