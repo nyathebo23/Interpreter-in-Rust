@@ -3,9 +3,7 @@ use crate::error_handler::*;
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::*;
 use crate::parser::operators_decl::*;
-use crate::parser::utils::and;
 use crate::parser::utils::check_equality;
-use crate::parser::utils::or;
 use crate::parser::utils::perform_add;
 use crate::parser::utils::perform_comparison;
 use crate::parser::utils::perform_num_op;
@@ -134,43 +132,62 @@ impl  Expression for BinaryExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
 
         let val1 = self.value1.evaluate(state_scope);
-        let val2 = self.value2.evaluate(state_scope);
         match self.operator {
             BinaryOperator::PLUS => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_add(val1, val2, &self.line)
             },
             BinaryOperator::MINUS => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_num_op(val1, val2, |x, y| x - y, &self.line)
             },
             BinaryOperator::STAR => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_num_op(val1, val2, |x, y| x * y, &self.line)
             },
             BinaryOperator::SLASH => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_num_op(val1, val2, |x, y| x / y, &self.line)
             },
             BinaryOperator::EQUALEQUAL => {
+                let val2 = self.value2.evaluate(state_scope);
                 check_equality(val1, val2, true)
             },
             BinaryOperator::BANGEQUAL => {
+                let val2 = self.value2.evaluate(state_scope);
                 check_equality(val1, val2, false)
             },
             BinaryOperator::GREATER => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_comparison(val1, val2, |x, y| x > y, &self.line)
             },
             BinaryOperator::GREATEREQUAL => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_comparison(val1, val2, |x, y| x >= y, &self.line)                
             },
             BinaryOperator::LESS => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_comparison(val1, val2, |x, y| x < y, &self.line)                
             },
             BinaryOperator::LESSEQUAL => {
+                let val2 = self.value2.evaluate(state_scope);
                 perform_comparison(val1, val2, |x, y| x <= y, &self.line)                
             },
             BinaryOperator::OR => {
-                or(val1, val2, &self.line)
+                if let Some(boolean) = val1.as_bool() {
+                    if boolean.0 {
+                        return val1;
+                    }
+                }
+                self.value2.evaluate(state_scope)
             },
             BinaryOperator::AND => {
-                and(val1, val2, &self.line)
+                if let Some(boolean) = val1.as_bool() {
+                    if !boolean.0 {
+                        return val1;
+                    }
+                }
+                self.value2.evaluate(state_scope)            
             }        
         }
     }
