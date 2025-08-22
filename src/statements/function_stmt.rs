@@ -14,6 +14,7 @@ pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     interpreter.next();
     if interpreter.parser.current_token().token_type == TokenType::SEMICOLON {
         let nil_expr: Box<dyn Expression> = Box::new(LiteralExpr{value: Box::new(NIL)});
+        interpreter.next();
         return ReturnStatement {
             expression: nil_expr
         };
