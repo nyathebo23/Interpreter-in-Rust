@@ -85,6 +85,9 @@ impl Statement for IfStatement  {
         let condition = get_condition(self.condition.evaluate(state));
         if condition {
             self.body.run(state);
+            if let Some(_return_val) = state.get_variable(&"return".to_string()) {
+                return;
+            }
         }
         else {
             
@@ -92,12 +95,18 @@ impl Statement for IfStatement  {
                 let condition = get_condition(stmt.condition.evaluate(state));
                 if condition {
                     stmt.run(state);
+                    if let Some(_return_val) = state.get_variable(&"return".to_string()) {
+                        return;
+                    }
                     return;
                 }               
             }
 
             if let Some(else_stmt) = &self.else_statement {
                 else_stmt.run(state);
+                if let Some(_return_val) = state.get_variable(&"return".to_string()) {
+                    return;
+                }
             }
         }
     }
@@ -113,6 +122,9 @@ impl Statement for WhileStatement  {
         let mut condition = get_condition(self.condition.evaluate(state));
         while condition {
             self.body.run(state);
+            if let Some(_return_val) = state.get_variable(&"return".to_string()) {
+                return;
+            }
             condition = get_condition(self.condition.evaluate(state));
         }        
     }
@@ -138,6 +150,9 @@ impl Statement for ForStatement  {
         let mut for_condition = get_condition(self.condition.evaluate(state));
         while for_condition {
             self.body.run(state);
+            if let Some(_return_val) = state.get_variable(&"return".to_string()) {
+                return;
+            }
             if let Some(last_instruction) = &self.last_instruction {
                 last_instruction.evaluate(state);
             }
@@ -168,7 +183,7 @@ impl Statement for BlockFuncStatement  {
     fn run(&self, state: &mut BlockScopes) {
         for stmt in self.statements.iter() {
             stmt.run(state);
-            if let Some(return_val) = state.get_variable(&"return".to_string()) {
+            if let Some(_return_val) = state.get_variable(&"return".to_string()) {
                 break;
             }
         }
