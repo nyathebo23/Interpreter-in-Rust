@@ -11,7 +11,7 @@ use crate::statements::{BlockFuncStatement, ReturnStatement, Statement};
 pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     interpreter.next();
     let expr = interpreter.parser.expression();
-    println!("{}", interpreter.parser.current_token().lexeme.to_string());
+    interpreter.check_token(TokenType::SEMICOLON, ";");
     ReturnStatement {
         expression: expr
     }
