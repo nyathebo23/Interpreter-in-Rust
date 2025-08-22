@@ -166,17 +166,14 @@ pub struct BlockFuncStatement {
 impl Statement for BlockFuncStatement  {
 
     fn run(&self, state: &mut BlockScopes) {
-        state.start_child_block();
         for stmt in self.statements.iter() {
             stmt.run(state);
             if let Some(return_val) = state.get_variable(&"return".to_string()) {
                 println!("{}", return_val.to_string());
-                        println!("{}", state.depth);
-
+                println!("{}", state.depth);
                 break;
             }
         }
-        state.end_child_block();
     }
 
 }
