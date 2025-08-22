@@ -18,7 +18,6 @@ fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
 
 pub fn block_func_statement(interpreter: &mut Interpreter) -> BlockFuncStatement {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
-    interpreter.next();
     while interpreter.parser.current_index < interpreter.parser.size {
         let token = interpreter.parser.current_token();
         match token.token_type {
