@@ -1,12 +1,14 @@
 
 use std::{borrow::Cow, ops::{Add, Div, Mul, Sub}};
-use crate::scanner::utils::literal_number;
+use crate::{function_manage::Function, scanner::utils::literal_number};
 
+#[derive(PartialEq)]
 pub enum Type {
     STRING,
     NUMBER,
     BOOLEAN,
     NIL,
+    FUNCTION
     //CLASSOBJ  
 }
 pub trait Object: ValueObjTrait + ToString {
@@ -27,6 +29,10 @@ pub trait ValueObjTrait {
     fn as_bool(&self) -> Option<&Bool> {
         None
     }
+
+    fn as_function(&self) -> Option<&Function> {
+        None
+    }
 }
 
 #[derive(Clone)]
@@ -40,6 +46,8 @@ pub struct Bool (pub bool);
 
 #[derive(Clone)]
 pub struct NIL;
+
+
 
 impl Object for Str {
     fn to_str(&self) -> Cow<'static, str> {

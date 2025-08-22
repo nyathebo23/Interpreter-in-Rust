@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
@@ -16,14 +15,12 @@ pub struct Interpreter<'a> {
 impl Interpreter<'_> {
     
     pub fn new(parser: Parser<'_>) -> Interpreter {
-        let func_map = HashMap::from([
-            (String::from("clock"), clock_declaration())
-        ]);
-        Interpreter { parser, state: BlockScopes::new(func_map) }
+        Interpreter { parser, state: BlockScopes::new() }
     }
 
 
     pub fn run(&mut self) {
+        self.state.define_function(&String::from("clock"), clock_declaration());
         let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
         while self.parser.current_index < self.parser.size {
             fun_declaration(self);

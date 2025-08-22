@@ -12,6 +12,7 @@ pub struct PrintStatement {
 
 impl Statement for PrintStatement  {
     fn run(&self, state: &mut BlockScopes) {
+       
        let value = &self.expression.evaluate(state);
        println!("{}", value.to_str()); 
     }

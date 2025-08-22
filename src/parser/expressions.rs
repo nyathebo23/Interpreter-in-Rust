@@ -50,8 +50,8 @@ pub struct GroupExpr  {
 impl Expression for FunctionCallExpr  {
 
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
-        if let Some(mut func) = state_scope.get_func(&self.func_name) {
-            func.call(&self.params, state_scope)
+        if let Some(func) = state_scope.get_func(&self.func_name) {
+            func.clone().call(&self.params, state_scope)
         }
         else {
             handle_error(&self.line, ErrorType::RuntimeError, 
