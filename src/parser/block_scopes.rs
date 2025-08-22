@@ -5,7 +5,7 @@ use crate::{function_manage::Function, parser::declarations::{Object, Type}};
 
 pub struct BlockScopes {
     vars_nodes_map: Vec<HashMap<String, Box<dyn Object>>>,
-    depth: usize
+    pub depth: usize
 }
 
 impl BlockScopes {
