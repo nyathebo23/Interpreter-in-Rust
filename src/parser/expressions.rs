@@ -14,6 +14,12 @@ pub trait Expression {
     fn to_string(&self) -> String;
 }
 
+pub struct FunctionCallExpr {
+    pub func_name: String,
+    pub params: Vec<Box<dyn Expression>>,
+    pub line: u32
+}
+
 pub struct IdentifierExpr {
     pub ident_name: String,
     pub value_to_assign: Option<Box<dyn Expression>>,
@@ -39,6 +45,25 @@ pub struct LiteralExpr {
 
 pub struct GroupExpr  {
     pub value: Box<dyn Expression>,
+}
+
+impl Expression for FunctionCallExpr  {
+
+    fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
+        if let Some(mut func) = state_scope.get_func(&self.func_name) {
+            func.call(&self.params, state_scope)
+        }
+        else {
+            handle_error(&self.line, ErrorType::RuntimeError, 
+                format!("Undefined function '{}'.", self.func_name).as_str());
+            process::exit(RUNTIME_ERROR_CODE);         
+        }
+
+    }
+
+    fn to_string(&self) -> String {
+        format!("<fn {}>", self.func_name)
+    }
 }
 
 impl Expression for IdentifierExpr {

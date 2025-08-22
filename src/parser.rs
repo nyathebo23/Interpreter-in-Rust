@@ -57,7 +57,6 @@ impl Parser<'_> {
                 prec_expr
             }
         }
-       
     }
 
     
@@ -136,6 +135,25 @@ impl Parser<'_> {
                     line: self.current_token().line
                 }
             );
+        }
+        else if next_token.token_type == TokenType::LEFTPAREN {
+            self.next();
+            let mut params: Vec<Box<dyn Expression>> = Vec::new();
+            if self.current_token().token_type != TokenType::RIGHTPAREN {
+                loop {
+                    params.push(self.expression());
+                    if self.current_token().token_type != TokenType::COMMA {
+                        break;
+                    } 
+                    self.next();
+                }
+            }
+            self.check_token(TokenType::RIGHTPAREN, ")");
+            return Box::new(FunctionCallExpr {
+                func_name: ident_str,
+                params,
+                line: next_token.line
+            });
         }
         else {
             self.next();

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::io::{self, Write};
@@ -14,6 +15,7 @@ mod error_handler;
 mod parser;
 mod tokenizer;
 mod statements;
+mod function_manage;
 mod interpreter;
 
 fn main() {
@@ -61,7 +63,7 @@ fn main() {
             }
             let mut parser = Parser::new(&tokens, 0);
             let express = parser.expression();
-            let mut scope: BlockScopes = BlockScopes::new();
+            let mut scope: BlockScopes = BlockScopes::new(HashMap::new());
             
             let result = express.evaluate(&mut scope);
             println!("{}", result.to_str());

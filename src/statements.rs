@@ -1,6 +1,7 @@
 use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
-
-
+mod simple_statement;
+pub mod controlflow_stmts;
+pub mod function_stmt;
 pub trait Statement {
     fn run(&self, state: &mut BlockScopes);
 }
@@ -142,4 +143,33 @@ impl Statement for ForStatement  {
             for_condition = get_condition(self.condition.evaluate(state));
         }        
     }
+}
+
+
+pub struct ReturnStatement {
+    pub expression: Box<dyn Expression>
+}
+
+impl Statement for ReturnStatement {
+    fn run(&self, state: &mut BlockScopes) {
+        let value = self.expression.evaluate(state);
+        let return_key = String::from("return");
+        state.set_global_variable(&return_key, value);
+    }
+}
+
+pub struct BlockFuncStatement {
+    pub statements: Vec<Box<dyn Statement>>
+}
+
+impl Statement for BlockFuncStatement  {
+
+    fn run(&self, state: &mut BlockScopes) {
+        state.start_child_block();
+        for stmt in self.statements.iter() {
+            stmt.run(state);
+        }
+        state.end_child_block();
+    }
+
 }
