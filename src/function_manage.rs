@@ -6,10 +6,10 @@ use crate::error_handler::SYNTAXIC_ERROR_CODE;
 use crate::interpreter::Interpreter;
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Number, Object, NIL};
-use crate::parser::expressions::{Expression, LiteralExpr};
+use crate::parser::expressions::{Expression};
 use crate::scanner::declarations::TokenType;
 use crate::statements::function_stmt::block_func_statement;
-use crate::statements::{BlockFuncStatement, ReturnStatement, Statement};
+use crate::statements::{BlockFuncStatement, Statement};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -26,6 +26,9 @@ impl Function {
     pub fn call(&mut self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes) -> Box<dyn Object> {
         if self.params_names.len() != params.len() {
             process::exit(SYNTAXIC_ERROR_CODE);
+        }
+        if self.name.as_str() == "clock" {
+            return Box::new(Number(clock() as f64));
         }
         for (param_name, param_val) in self.params_names.iter().zip(params.iter()) {
             self.state.set_init_variable(param_name, param_val.evaluate(out_func_state));
@@ -97,16 +100,16 @@ fn clock() -> u64 {
 }
 
 pub fn clock_declaration() -> Function {
-    let return_stmt: Box<dyn Statement> = Box::new(ReturnStatement {
-        expression: Box::new(LiteralExpr { value: Box::new(Number(clock() as f64)) } )
-    });
-    let stmts: Vec<Box<dyn Statement>> = Vec::from([return_stmt]);
+    // let return_stmt: Box<dyn Statement> = Box::new(ReturnStatement {
+    //     expression: Box::new(LiteralExpr { value: Box::new(Number(clock() as f64)) } )
+    // });
+    // let stmts: Vec<Box<dyn Statement>> = Vec::from([return_stmt]);
     Function { 
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
         state: BlockScopes::new(HashMap::new()), 
         statement: Rc::new(BlockFuncStatement {
-            statements: stmts
+            statements: Vec::new()
         })
     }
 }
