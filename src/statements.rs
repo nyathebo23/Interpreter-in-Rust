@@ -170,7 +170,7 @@ impl Statement for BlockFuncStatement  {
         for stmt in self.statements.iter() {
             stmt.run(state);
             if let Some(return_val) = state.get_variable(&"return".to_string()) {
-                println!("{}", return_val);
+                println!("{}", return_val.to_string());
                 break;
             }
         }
