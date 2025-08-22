@@ -51,7 +51,7 @@ impl Expression for FunctionCallExpr  {
 
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
         if let Some(func) = state_scope.get_func(&self.func_name) {
-            println!("{} {}", func.name.to_string(), func.params_names[0]);
+            println!("{} {}", func.name.to_string(), func.params_names.len());
             func.clone().call(&self.params, state_scope)
         }
         else {
