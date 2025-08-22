@@ -115,6 +115,7 @@ impl Parser<'_> {
             self.exit_error(&self.tokens_list[self.current_index].line, 
                 format!("Error: Expected character {}", lexeme).as_str());
         }
+
     }
 
     fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
@@ -150,6 +151,7 @@ impl Parser<'_> {
                 }
             }
             self.check_token(TokenType::RIGHTPAREN, ")");
+            self.next();
             return Box::new(FunctionCallExpr {
                 func_name: ident_str,
                 params,
