@@ -69,11 +69,13 @@ impl Function {
             out_func_state.set_init_variable(param_name, param_value);
         }
         self.statement.run(out_func_state);
+        println!("{}", out_func_state.depth);
+
         let ret_value = match out_func_state.get_variable(&String::from("return")) {
             Some(ret_value ) => ret_value,
             None => Box::new(NIL)
         };
-        println!("{} {}", ret_value.to_string(), self.params_names.clone()[0]);
+        println!("{} {}", ret_value.to_string(), out_func_state.depth);
         out_func_state.end_child_block();
         ret_value
     }
