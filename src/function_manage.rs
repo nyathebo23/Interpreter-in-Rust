@@ -61,6 +61,7 @@ pub fn fun_declaration(interpreter: &mut Interpreter) {
     if token.token_type == TokenType::FUN {
         interpreter.next();
         let identifier = interpreter.parser.current_token().clone();
+        interpreter.next();        
         let mut params: Vec<String> = Vec::new();
         interpreter.check_token(TokenType::LEFTPAREN, "(");
         let mut current_token = interpreter.parser.current_token();
