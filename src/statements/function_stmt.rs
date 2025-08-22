@@ -8,7 +8,7 @@ use crate::statements::simple_statement::var_statement;
 use crate::statements::{BlockFuncStatement, ReturnStatement, Statement}; 
 
 
-fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
+pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     interpreter.next();
     let expr = interpreter.parser.expression();
     ReturnStatement {
@@ -23,9 +23,6 @@ pub fn block_func_statement(interpreter: &mut Interpreter) -> BlockFuncStatement
         match token.token_type {
             TokenType::VAR => {
                 stmts.push(Box::new(var_statement(interpreter)));
-            },
-            TokenType::RETURN => {
-                stmts.push(Box::new(return_statement(interpreter)));
             },
             TokenType::RIGHTBRACE => {
                 interpreter.next();

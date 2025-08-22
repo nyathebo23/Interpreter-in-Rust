@@ -63,15 +63,18 @@ impl Function {
         if self.name.as_str() == "clock" {
             return Box::new(Number(clock() as f64));
         }
-        let mut func_state = BlockScopes::new();
+        out_func_state.start_child_block();
         for (param_name, param_val) in self.params_names.iter().zip(params.iter()) {
-            func_state.set_init_variable(param_name, param_val.evaluate(out_func_state));
+            let param_value = param_val.evaluate(out_func_state);
+            out_func_state.set_init_variable(param_name, param_value);
         }
-        self.statement.run(&mut func_state);
-        match func_state.get_global_variable(&String::from("return")) {
+        self.statement.run(out_func_state);
+        let ret_value = match out_func_state.get_variable(&String::from("return")) {
             Some(ret_value ) => ret_value,
             None => Box::new(NIL)
-        }
+        };
+        out_func_state.end_child_block();
+        ret_value
     }
 
 }

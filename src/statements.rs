@@ -155,7 +155,7 @@ impl Statement for ReturnStatement {
     fn run(&self, state: &mut BlockScopes) {
         let value = self.expression.evaluate(state);
         let return_key = String::from("return");
-        state.set_global_variable(&return_key, value);
+        state.set_init_variable(&return_key, value);
     }
 }
 

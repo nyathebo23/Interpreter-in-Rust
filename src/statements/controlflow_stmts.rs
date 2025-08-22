@@ -2,6 +2,7 @@ use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::interpreter::Interpreter; 
+use crate::statements::function_stmt::return_statement;
 use crate::statements::simple_statement::{expr_statement, print_statement, var_statement};
 use crate::statements::{BlockStatement, ExprStatement, ForStatement, IfStatement, PartIfStatement, Statement, VarStatement, WhileStatement};
 use crate::scanner::declarations::TokenType;
@@ -56,8 +57,8 @@ fn statement_condition(interpreter: &mut Interpreter) -> Box<dyn Statement> {
 
 pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType) -> Box<dyn Statement> {
     match tokentype {
-        TokenType::PRINT => {
-            Box::new(print_statement(interpreter))
+        TokenType::IDENTIFIER => {
+            Box::new(expr_statement(interpreter))
         },
         TokenType::LEFTBRACE => {
             Box::new(block_scope(interpreter))
@@ -70,6 +71,12 @@ pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType) -> 
         },
         TokenType::FOR => {
             Box::new(for_statement(interpreter))
+        },
+        TokenType::PRINT => {
+            Box::new(print_statement(interpreter))
+        },
+        TokenType::RETURN => {
+            Box::new(return_statement(interpreter))
         },
         _ => {
             Box::new(expr_statement(interpreter))
