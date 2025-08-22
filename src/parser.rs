@@ -139,6 +139,7 @@ impl Parser<'_> {
         }
         else if next_token.token_type == TokenType::LEFTPAREN {
             let mut params: Vec<Box<dyn Expression>> = Vec::new();
+            self.next();
             if self.current_token().token_type != TokenType::RIGHTPAREN {
                 loop {
                     params.push(self.expression());
