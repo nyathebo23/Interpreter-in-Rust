@@ -123,9 +123,10 @@ impl Parser<'_> {
             handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
             process::exit(SYNTAXIC_ERROR_CODE)
         }
-        let next_token = &self.tokens_list[self.current_index + 1];
+        
+        self.next();
+        let next_token = &self.tokens_list[self.current_index];
         if next_token.token_type == TokenType::EQUAL {
-            self.next();
             self.next();
             let expr = self.expression();
             return Box::new(
@@ -137,7 +138,6 @@ impl Parser<'_> {
             );
         }
         else if next_token.token_type == TokenType::LEFTPAREN {
-            self.next();
             let mut params: Vec<Box<dyn Expression>> = Vec::new();
             if self.current_token().token_type != TokenType::RIGHTPAREN {
                 loop {
@@ -156,7 +156,6 @@ impl Parser<'_> {
             });
         }
         else {
-            self.next();
             return Box::new(
                 IdentifierExpr {
                     ident_name: ident_str,
