@@ -1,6 +1,7 @@
 use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::function_manage::fun_declaration;
 use crate::interpreter::Interpreter;
 use crate::parser::declarations::NIL;
 use crate::parser::expressions::{Expression, LiteralExpr};
@@ -39,6 +40,9 @@ pub fn block_func_statement(interpreter: &mut Interpreter) -> BlockFuncStatement
                 return BlockFuncStatement {
                     statements: stmts
                 };
+            },
+            TokenType::FUN => {
+                fun_declaration(interpreter);
             },
             _ => stmts.push(block_statements(interpreter, token.token_type))
         } 

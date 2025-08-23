@@ -82,37 +82,37 @@ impl Function {
 
 
 pub fn fun_declaration(interpreter: &mut Interpreter) {
-    let token = interpreter.parser.current_token();
-    if token.token_type == TokenType::FUN {
-        interpreter.next();
-        let identifier = interpreter.parser.current_token().clone();
-        interpreter.next();        
-        let mut params: Vec<String> = Vec::new();
-        interpreter.check_token(TokenType::LEFTPAREN, "(");
-        let mut current_token = interpreter.parser.current_token();
-        if current_token.token_type != TokenType::RIGHTPAREN {
-            loop {
-                current_token = interpreter.parser.current_token();
-                params.push(current_token.lexeme.to_string());
-                interpreter.check_token(TokenType::IDENTIFIER, "Identifier");
-                if interpreter.parser.current_token().token_type != TokenType::COMMA {
-                    break;
-                } 
-                interpreter.next();
-            }
+    interpreter.next();
+    let identifier = interpreter.parser.current_token().clone();
+    interpreter.next();        
+    let mut params: Vec<String> = Vec::new();
+    interpreter.check_token(TokenType::LEFTPAREN, "(");
+    let mut current_token = interpreter.parser.current_token();
+    if current_token.token_type != TokenType::RIGHTPAREN {
+        loop {
+            current_token = interpreter.parser.current_token();
+            params.push(current_token.lexeme.to_string());
+            interpreter.check_token(TokenType::IDENTIFIER, "Identifier");
+            if interpreter.parser.current_token().token_type != TokenType::COMMA {
+                break;
+            } 
+            interpreter.next();
         }
-        interpreter.check_token(TokenType::RIGHTPAREN, ")");
-        interpreter.check_token(TokenType::LEFTBRACE, "{");
-        let statement = block_func_statement(interpreter);
-        let ident_str = identifier.lexeme.to_string();
-        let function = Function {
-            name: ident_str.into(),
-            params_names: params.into(),
-            statement: Rc::new(statement),
-        };
-        interpreter.state.define_function(&function.name.clone(), function);
     }
+    interpreter.check_token(TokenType::RIGHTPAREN, ")");
+    interpreter.check_token(TokenType::LEFTBRACE, "{");
+    let statement = block_func_statement(interpreter);
+    let ident_str = identifier.lexeme.to_string();
+    let function = Function {
+        name: ident_str.into(),
+        params_names: params.into(),
+        statement: Rc::new(statement),
+    };
+    interpreter.state.define_function(&function.name.clone(), function);
+    
 }
+
+
 
 fn clock() -> u64 {
     match SystemTime::now().duration_since(UNIX_EPOCH) {
@@ -122,10 +122,6 @@ fn clock() -> u64 {
 }
 
 pub fn clock_declaration() -> Function {
-    // let return_stmt: Box<dyn Statement> = Box::new(ReturnStatement {
-    //     expression: Box::new(LiteralExpr { value: Box::new(Number(clock() as f64)) } )
-    // });
-    // let stmts: Vec<Box<dyn Statement>> = Vec::from([return_stmt]);
     Function { 
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
