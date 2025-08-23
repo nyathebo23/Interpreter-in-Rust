@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{function_manage::Function, parser::declarations::{Object, Type}};
+use crate::{function_manage::Function, parser::declarations::{Object}};
 
 
 pub struct BlockScopes {
@@ -41,16 +41,16 @@ impl BlockScopes {
         self.set_init_variable(func_name, Box::new(function));
     }
 
-    pub fn get_func(&mut self, func_name: &String) -> Option<&Function> {
-        for hashmap in self.vars_nodes_map.iter().rev() {
-            if let Some(value) = hashmap.get(func_name) {
-                if value.get_type() == Type::FUNCTION {
-                    return Some(value.as_function().unwrap());
-                }
-            }
-        }
-        None
-    }
+    // pub fn get_func(&mut self, func_name: &String) -> Option<&Function> {
+    //     for hashmap in self.vars_nodes_map.iter().rev() {
+    //         if let Some(value) = hashmap.get(func_name) {
+    //             if value.get_type() == Type::FUNCTION {
+    //                 return Some(value.as_function().unwrap());
+    //             }
+    //         }
+    //     }
+    //     None
+    // }
 
     pub fn start_child_block(&mut self) {
         self.vars_nodes_map.push(HashMap::new());

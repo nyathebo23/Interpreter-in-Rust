@@ -68,7 +68,7 @@ impl Parser<'_> {
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
             TokenType::IDENTIFIER => { 
-                return self.identifier_expr(token); 
+                return self.identifier_expr(token);
             },
             TokenType::LEFTPAREN => {
                 self.next();
@@ -102,7 +102,7 @@ impl Parser<'_> {
             }
         };
         self.next();
-        expr
+        self.func_call_params(expr)
     }
 
     fn exit_error(&self, line: &u32, text: &str) {
@@ -115,7 +115,6 @@ impl Parser<'_> {
             self.exit_error(&self.tokens_list[self.current_index].line, 
                 format!("Error: Expected character {}", lexeme).as_str());
         }
-
     }
 
     fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
@@ -124,7 +123,6 @@ impl Parser<'_> {
             handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
             process::exit(SYNTAXIC_ERROR_CODE)
         }
-        
         self.next();
         let next_token = &self.tokens_list[self.current_index];
         if next_token.token_type == TokenType::EQUAL {
@@ -138,7 +136,19 @@ impl Parser<'_> {
                 }
             );
         }
-        else if next_token.token_type == TokenType::LEFTPAREN {
+        self.func_call_params(Box::new(
+            IdentifierExpr {
+                ident_name: ident_str,
+                value_to_assign: None,
+                line: token.line
+            }
+        ))
+    }
+
+    fn func_call_params(&mut self, func_obj_expr: Box<dyn Expression>) -> Box<dyn Expression> {
+        let current_token = self.current_token();
+        let line = current_token.line;
+        if current_token.token_type == TokenType::LEFTPAREN {
             let mut params: Vec<Box<dyn Expression>> = Vec::new();
             self.next();
             if self.current_token().token_type != TokenType::RIGHTPAREN {
@@ -152,21 +162,15 @@ impl Parser<'_> {
             }
             self.check_token(TokenType::RIGHTPAREN, ")");
             self.next();
-            return Box::new(FunctionCallExpr {
-                func_name: ident_str,
-                params,
-                line: next_token.line
+            let func_expr = Box::new(
+                FunctionCallExpr {
+                    func: func_obj_expr,
+                    params,
+                    line: line
             });
+            return self.func_call_params(func_expr);
         }
-        else {
-            return Box::new(
-                IdentifierExpr {
-                    ident_name: ident_str,
-                    value_to_assign: None,
-                    line: token.line
-                }
-            );
-        }
+        func_obj_expr
     }
 
     pub fn next(&mut self) {

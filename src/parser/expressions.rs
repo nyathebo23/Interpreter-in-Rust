@@ -15,7 +15,7 @@ pub trait Expression {
 }
 
 pub struct FunctionCallExpr {
-    pub func_name: String,
+    pub func: Box<dyn Expression>,
     pub params: Vec<Box<dyn Expression>>,
     pub line: u32
 }
@@ -50,19 +50,20 @@ pub struct GroupExpr  {
 impl Expression for FunctionCallExpr  {
 
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
-        if let Some(func) = state_scope.get_func(&self.func_name) {
-            func.clone().call(&self.params, state_scope)
+        let func_name = self.func.evaluate(state_scope);
+        if func_name.get_type() != Type::FUNCTION {
+            handle_error(&self.line, ErrorType::RuntimeError, 
+                "Can only call functions and classes.");
+            process::exit(RUNTIME_ERROR_CODE); 
         }
         else {
-            handle_error(&self.line, ErrorType::RuntimeError, 
-                format!("Undefined function '{}'.", self.func_name).as_str());
-            process::exit(RUNTIME_ERROR_CODE);         
+            (func_name.as_function().unwrap()).call(&self.params, state_scope, &self.line)
         }
 
     }
 
     fn to_string(&self) -> String {
-        format!("<fn {}>", self.func_name)
+        self.func.to_string()
     }
 }
 

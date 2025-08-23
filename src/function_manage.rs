@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::process;
 use std::rc::Rc;
 
-use crate::error_handler::SYNTAXIC_ERROR_CODE;
+use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Number, Object, ValueObjTrait, NIL};
 use crate::parser::expressions::{Expression};
@@ -53,8 +53,11 @@ impl ToString for Function {
 
 impl Function {
 
-    pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes) -> Box<dyn Object> {
+    pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> Box<dyn Object> {
+        let (expect_params_len, recv_params_len) = (self.params_names.len(), params.len());
         if self.params_names.len() != params.len() {
+            handle_error(line, ErrorType::RuntimeError, 
+                format!("Expected {} arguments but got {}", expect_params_len, recv_params_len).as_str());
             process::exit(SYNTAXIC_ERROR_CODE);
         }
         if self.name.as_str() == "clock" {
