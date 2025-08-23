@@ -3,12 +3,9 @@ use std::process;
 use std::rc::Rc;
 
 use crate::error_handler::SYNTAXIC_ERROR_CODE;
-use crate::interpreter::Interpreter;
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Number, Object, ValueObjTrait, NIL};
 use crate::parser::expressions::{Expression};
-use crate::scanner::declarations::TokenType;
-use crate::statements::function_stmt::block_func_statement;
 use crate::statements::{BlockFuncStatement, Statement};
 use crate::parser::declarations::Type;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -80,37 +77,6 @@ impl Function {
 
 }
 
-
-pub fn fun_declaration(interpreter: &mut Interpreter) {
-    interpreter.next();
-    let identifier = interpreter.parser.current_token().clone();
-    interpreter.next();        
-    let mut params: Vec<String> = Vec::new();
-    interpreter.check_token(TokenType::LEFTPAREN, "(");
-    let mut current_token = interpreter.parser.current_token();
-    if current_token.token_type != TokenType::RIGHTPAREN {
-        loop {
-            current_token = interpreter.parser.current_token();
-            params.push(current_token.lexeme.to_string());
-            interpreter.check_token(TokenType::IDENTIFIER, "Identifier");
-            if interpreter.parser.current_token().token_type != TokenType::COMMA {
-                break;
-            } 
-            interpreter.next();
-        }
-    }
-    interpreter.check_token(TokenType::RIGHTPAREN, ")");
-    interpreter.check_token(TokenType::LEFTBRACE, "{");
-    let statement = block_func_statement(interpreter);
-    let ident_str = identifier.lexeme.to_string();
-    let function = Function {
-        name: ident_str.into(),
-        params_names: params.into(),
-        statement: Rc::new(statement),
-    };
-    interpreter.state.define_function(&function.name.clone(), function);
-    
-}
 
 
 

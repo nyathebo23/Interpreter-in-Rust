@@ -1,7 +1,7 @@
 use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
-use crate::function_manage::{clock_declaration, fun_declaration};
+use crate::function_manage::clock_declaration;
 use crate::parser::{block_scopes::BlockScopes, Parser};
 use crate::scanner::declarations::TokenType;
 use crate::statements::controlflow_stmts::statement;
@@ -23,7 +23,6 @@ impl Interpreter<'_> {
         self.state.define_function(&String::from("clock"), clock_declaration());
         let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
         while self.parser.current_index < self.parser.size {
-            fun_declaration(self);
             stmts.push(statement(self));
         }
         for stmt in stmts {

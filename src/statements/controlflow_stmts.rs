@@ -1,9 +1,8 @@
 use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
-use crate::function_manage::fun_declaration;
 use crate::interpreter::Interpreter; 
-use crate::statements::function_stmt::return_statement;
+use crate::statements::function_stmt::{func_decl_statement, return_statement};
 use crate::statements::simple_statement::{expr_statement, print_statement, var_statement};
 use crate::statements::{BlockStatement, ExprStatement, ForStatement, IfStatement, PartIfStatement, Statement, VarStatement, WhileStatement};
 use crate::scanner::declarations::TokenType;
@@ -25,7 +24,7 @@ pub fn block_scope(interpreter: &mut Interpreter) -> BlockStatement {
                 };
             },
             TokenType::FUN => {
-                fun_declaration(interpreter);
+                stmts.push(Box::new(func_decl_statement(interpreter)));
             },
             _ => stmts.push(block_statements(interpreter, token.token_type))
         } 
@@ -39,11 +38,11 @@ pub fn block_scope(interpreter: &mut Interpreter) -> BlockStatement {
 }
 
 pub fn statement(interpreter: &mut Interpreter) -> Box<dyn Statement> {
-    if interpreter.parser.current_token().token_type == TokenType::FUN {
-        fun_declaration(interpreter);
-    }
     let token = interpreter.parser.current_token();
     match token.token_type {
+        TokenType::FUN => {
+            Box::new(func_decl_statement(interpreter))
+        },
         TokenType::VAR => {
             Box::new(var_statement(interpreter))
         },

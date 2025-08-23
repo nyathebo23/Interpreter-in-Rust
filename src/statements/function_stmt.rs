@@ -1,14 +1,15 @@
 use std::process;
+use std::rc::Rc;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
-use crate::function_manage::fun_declaration;
+use crate::function_manage::Function;
 use crate::interpreter::Interpreter;
 use crate::parser::declarations::NIL;
 use crate::parser::expressions::{Expression, LiteralExpr};
 use crate::scanner::declarations::TokenType;
 use crate::statements::controlflow_stmts::block_statements;
 use crate::statements::simple_statement::var_statement;
-use crate::statements::{BlockFuncStatement, ReturnStatement, Statement}; 
+use crate::statements::{BlockFuncStatement, FunctionDeclStatement, ReturnStatement, Statement}; 
 
 
 pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
@@ -42,7 +43,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter) -> BlockFuncStatement
                 };
             },
             TokenType::FUN => {
-                fun_declaration(interpreter);
+                stmts.push(Box::new(func_decl_statement(interpreter)));
             },
             _ => stmts.push(block_statements(interpreter, token.token_type))
         } 
@@ -53,4 +54,37 @@ pub fn block_func_statement(interpreter: &mut Interpreter) -> BlockFuncStatement
     handle_error(&last_token.line, ErrorType::SyntacticError, 
         format!("Error at {}: Expect '}}'", last_token.lexeme).as_str());
     process::exit(SYNTAXIC_ERROR_CODE);  
+}
+
+pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
+    interpreter.next();
+    let identifier = interpreter.parser.current_token().clone();
+    interpreter.next();        
+    let mut params: Vec<String> = Vec::new();
+    interpreter.check_token(TokenType::LEFTPAREN, "(");
+    let mut current_token = interpreter.parser.current_token();
+    if current_token.token_type != TokenType::RIGHTPAREN {
+        loop {
+            current_token = interpreter.parser.current_token();
+            params.push(current_token.lexeme.to_string());
+            interpreter.check_token(TokenType::IDENTIFIER, "Identifier");
+            if interpreter.parser.current_token().token_type != TokenType::COMMA {
+                break;
+            } 
+            interpreter.next();
+        }
+    }
+    interpreter.check_token(TokenType::RIGHTPAREN, ")");
+    interpreter.check_token(TokenType::LEFTBRACE, "{");
+    let statement = block_func_statement(interpreter);
+    let ident_str = identifier.lexeme.to_string();
+    let function =     Function {
+        name: ident_str.into(),
+        params_names: params.into(),
+        statement: Rc::new(statement),
+    };
+    FunctionDeclStatement {
+        func_name: function.name.clone(),
+        function_decl: function
+    }
 }

@@ -1,4 +1,6 @@
-use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
+use std::rc::Rc;
+
+use crate::{function_manage::Function, parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression}};
 mod simple_statement;
 pub mod controlflow_stmts;
 pub mod function_stmt;
@@ -189,5 +191,15 @@ impl Statement for BlockFuncStatement  {
             }
         }
     }
+}
 
+pub struct FunctionDeclStatement {
+    func_name: Rc<String>,
+    function_decl: Function
+}
+
+impl Statement for FunctionDeclStatement {
+    fn run(&self, state: &mut BlockScopes) {
+        state.define_function(&self.func_name.clone(), self.function_decl.clone());
+    }
 }
