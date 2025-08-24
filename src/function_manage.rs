@@ -76,6 +76,11 @@ impl Function {
             out_func_state.set_init_variable(param_name, param_value);
         }
         let extra_datas = self.extra_map.borrow();
+        if self.name.to_string() == "filter" {
+            for (k, v) in extra_datas.iter() {
+                println!("key val 2 {} {}", k, v.to_string());
+            }
+        }
         for (key, value) in extra_datas.iter()  {
             if let None = out_func_state.get_variable(key) {
                 out_func_state.set_init_variable(key, value.dyn_clone());
