@@ -84,10 +84,18 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     let function =     Function {
         name: ident_str.into(),
         params_names: params.into(),
-        statements: Rc::new(RefCell::new(statements)),
+        statements: Rc::new(statements),
         extra_map: Rc::new(RefCell::new(HashMap::new()))
     };
     FunctionDeclStatement {
         function_decl: function,
     }
 }
+
+// fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
+//     let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
+//     for hashmap in &state.vars_nodes_map {
+//         result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
+//     }
+//     result_map
+// }

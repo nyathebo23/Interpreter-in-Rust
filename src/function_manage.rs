@@ -17,7 +17,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct Function {
     pub name: Rc<String>,
     pub params_names: Rc<Vec<String>>,
-    pub statements: Rc<RefCell<Vec<Box<dyn Statement>>>>,
+    pub statements: Rc<Vec<Box<dyn Statement>>>,
     pub extra_map: Rc<RefCell<HashMap<String, Box<dyn Object>>>>
 }
 
@@ -81,8 +81,7 @@ impl Function {
                 out_func_state.set_init_variable(key, value.dyn_clone());
             }
         }
-        let mut stmts = self.statements.borrow_mut();
-        Interpreter::run(out_func_state, &mut stmts);
+        Interpreter::run(out_func_state, &self.statements);
 
         let ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
@@ -109,7 +108,7 @@ pub fn clock_declaration() -> Function {
     Function { 
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
-        statements: Rc::new(RefCell::new(Vec::new())),
+        statements: Rc::new(Vec::new()),
         extra_map: Rc::new(RefCell::new(HashMap::new()))
     }
 }

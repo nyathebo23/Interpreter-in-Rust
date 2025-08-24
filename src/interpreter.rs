@@ -24,10 +24,10 @@ impl Interpreter<'_> {
         Self::run(&mut self.state, &mut stmts);
     }
 
-    pub fn run(state: &mut BlockScopes, stmts: &mut Vec<Box<dyn Statement>>) {
+    pub fn run(state: &mut BlockScopes, stmts: &Vec<Box<dyn Statement>>) {
         let mut index = 0;
         while index < stmts.len() {
-            let statement: &mut Box<dyn Statement>  = &mut stmts[index];
+            let statement: &Box<dyn Statement>  = &stmts[index];
             statement.run(state, &mut index);
         }
     }

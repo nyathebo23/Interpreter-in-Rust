@@ -1,13 +1,13 @@
 
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
+use std::{usize::MAX};
 
 use crate::{function_manage::Function, parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression}};
 mod simple_statement;
 pub mod controlflow_stmts;
 pub mod function_stmt;
 pub trait Statement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize);
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize);
 }
  
 pub struct PrintStatement {
@@ -15,7 +15,7 @@ pub struct PrintStatement {
 }
 
 impl Statement for PrintStatement  {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
        let value = &self.expression.evaluate(state);
        println!("{}", value.to_str()); 
        *current_stmt_ind += 1;
@@ -28,7 +28,7 @@ pub struct VarStatement {
 }
 
 impl Statement for VarStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let expr_value = self.expression.evaluate(state);
         state.set_init_variable(&self.name, expr_value);
        *current_stmt_ind += 1;
@@ -40,7 +40,7 @@ pub struct ExprStatement {
 }
 
 impl Statement for ExprStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         self.expression.evaluate(state);
        *current_stmt_ind += 1;
     }
@@ -54,7 +54,7 @@ pub struct JumpStatement {
 
 
 impl Statement for JumpStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let condition = get_condition(self.condition.evaluate(state));
         if condition {
             *current_stmt_ind += 1;
@@ -71,7 +71,7 @@ pub struct BackToStatement {
 }
 
 impl Statement for BackToStatement {
-    fn run(&mut self, _state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, _state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         *current_stmt_ind -= self.steps;
     }
 }
@@ -81,7 +81,7 @@ pub struct GoToStatement {
 }
 
 impl Statement for GoToStatement {
-    fn run(&mut self, _state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, _state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         *current_stmt_ind += self.steps;
     }
 }
@@ -91,7 +91,7 @@ pub struct StartBlockStatement {
 }
 
 impl Statement for StartBlockStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         state.start_child_block();
         *current_stmt_ind += 1;
     }
@@ -102,7 +102,7 @@ pub struct EndBlockStatement {
 }
 
 impl Statement for EndBlockStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         state.end_child_block();
         *current_stmt_ind += 1;
     }
@@ -116,7 +116,7 @@ pub struct ReturnStatement {
 }
 
 impl Statement for ReturnStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let value = self.expression.evaluate(state);
         let return_key = String::from("return");
         let mut ind = 0;
@@ -147,21 +147,10 @@ pub struct FunctionDeclStatement {
     function_decl: Function,
 }
 
-impl FunctionDeclStatement {
-    
-    fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
-        let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
-        for hashmap in &state.vars_nodes_map {
-            result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
-        }
-        result_map
-    }
-}
 
 impl Statement for FunctionDeclStatement {
-    fn run(&mut self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
-        state.define_function(&mut self.function_decl.name.clone(), self.function_decl.clone());
-        self.function_decl.extra_map = Rc::new(RefCell::new(Self::get_outfunc_variables(&state)));
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+        state.define_function(&self.function_decl.name.clone(), self.function_decl.clone());
         *current_stmt_ind += 1;
     }
 }
