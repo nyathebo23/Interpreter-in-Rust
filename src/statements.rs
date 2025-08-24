@@ -156,7 +156,12 @@ impl Statement for FunctionDeclStatement {
             statements: self.function_decl.statements.clone(),
             extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
         };
-        state.define_function(&self.function_decl.name.clone(), func_copy);
+        let bor = func_copy.extra_map.borrow();
+        for (k, v) in bor.iter() {
+            println!("key val {} {}", k, v.to_string());
+        }
+
+        state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         let min = state.get_variable(&String::from("min"));
         if let Some(valmin) = min {
             println!("min {} name_fun {}", valmin.to_string(), self.function_decl.name.clone(),);
