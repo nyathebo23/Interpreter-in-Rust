@@ -116,7 +116,7 @@ impl Statement for ReturnStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let value = self.expression.evaluate(state);
         let return_key = String::from("return");
-        while state.vars_nodes_map.len() > 0 {
+        while state.vars_nodes_map.len() > 1 {
             let mut hashmap = state.vars_nodes_map.pop().unwrap();
             if let Some(_val) = hashmap.get(&return_key) {
                 hashmap.insert(return_key.clone(), value.dyn_clone());

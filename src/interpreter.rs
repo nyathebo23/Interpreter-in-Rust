@@ -29,6 +29,11 @@ impl Interpreter<'_> {
         while index < stmts.len() {
             let statement: &Box<dyn Statement>  = &stmts[index];
             statement.run(state, &mut index);
+            for map in &state.vars_nodes_map {
+                for item in map.values() {
+                    println!(" {}", item.to_string())
+                }
+            }
             println!("{} {}", state.vars_nodes_map.len(), index);
 
         }
