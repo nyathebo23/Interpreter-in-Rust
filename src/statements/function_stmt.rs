@@ -75,7 +75,10 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     }
     interpreter.parser.check_token(TokenType::RIGHTPAREN, ")");
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
-    
+    let var = interpreter.state.get_variable(&String::from("min"));
+    if let Some(varname) = var {
+        println!("{} ", varname.to_string());
+    }
     let statements = block_func_statement(interpreter);
     
     let function =     Function {
