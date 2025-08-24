@@ -156,13 +156,6 @@ impl Statement for FunctionDeclStatement {
             statements: self.function_decl.statements.clone(),
             extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
         };
-        // if func_copy.name.to_string() == "filter" {
-        //     let bor = func_copy.extra_map.borrow();
-        //     for (k, v) in bor.iter() {
-        //         println!("key val {} {}", k, v.to_string());
-        //     }
-        // }
-
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         *current_stmt_ind += 1;
     }

@@ -138,8 +138,10 @@ pub fn if_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
             break;
         }
         else {
-            else_stmt = Some(statement_condition(interpreter));
-            stmt_count += elif_stmts.len() + 1;
+            let else_statement = statement_condition(interpreter);
+            stmt_count += else_statement.len() + 1;
+
+            else_stmt = Some(else_statement);
         }
     }
 
