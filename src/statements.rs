@@ -168,8 +168,8 @@ impl Statement for FunctionDeclStatement {
         if let Some(valmin) = min {
             println!("min {} name_fun {}", valmin.to_string(), self.function_decl.name.clone(),);
         }
-        if let Some(f) = state.get_variable(&String::from("greaterThanX")) {
-            println!("greaterX {}", f.to_string());
+        if let Some(f) = state.get_variable(&String::from("greaterThanY")) {
+            println!("greaterY {}", f.to_string());
             let op = f.as_function().unwrap().extra_map.borrow();
             for (k, v) in op.iter() {
                 println!("key val greater X {} {}", k, v.to_string());
