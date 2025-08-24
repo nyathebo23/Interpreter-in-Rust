@@ -129,9 +129,9 @@ impl Statement for ReturnStatement {
                 ind += 1;
             }
         } 
-        for _ in 0..ind {
-            state.end_child_block();
-        }
+        // for _ in 0..ind {
+        //     state.end_child_block();
+        // }
         *current_stmt_ind = MAX;
     }
 }
