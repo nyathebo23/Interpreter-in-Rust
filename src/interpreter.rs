@@ -21,6 +21,7 @@ impl Interpreter<'_> {
         while self.parser.current_index < self.parser.size {
             stmts.append(&mut statement(self));
         }
+        println!("{}", stmts.len());
         Self::run(&mut self.state, &stmts);
     }
 

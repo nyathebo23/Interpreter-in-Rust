@@ -108,9 +108,6 @@ impl Statement for EndBlockStatement {
     }
 }
 
-
-
-
 pub struct ReturnStatement {
     pub expression: Box<dyn Expression>,
 }
@@ -135,7 +132,6 @@ impl ReturnStatement  {
     }
 
 }
-
 
 pub struct FunctionDeclStatement {
     function_decl: Function,
