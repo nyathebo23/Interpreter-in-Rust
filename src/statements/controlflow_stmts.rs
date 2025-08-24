@@ -103,8 +103,13 @@ pub fn if_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
     let size_ifblock = if_body.len() + 2;
     let jumpif = jump(cond_expr, size_ifblock);
     let mut stmt_count = size_ifblock;
+
+    let mut result_stmts: Vec<Box<dyn Statement>> = Vec::new();
+    result_stmts.push(jumpif);
+    result_stmts.append(&mut if_body);
     if interpreter.parser.current_index == interpreter.parser.size {
-        
+        result_stmts.push(go_to( 1));
+        return result_stmts;
     }
 
     let mut new_token = interpreter.parser.current_token().clone();
@@ -138,9 +143,7 @@ pub fn if_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
         }
     }
 
-    let mut result_stmts: Vec<Box<dyn Statement>> = Vec::new();
-    result_stmts.push(jumpif);
-    result_stmts.append(&mut if_body);
+
     let mut steps_to_end = stmt_count - size_ifblock;
     result_stmts.push(go_to(steps_to_end + 1));
 

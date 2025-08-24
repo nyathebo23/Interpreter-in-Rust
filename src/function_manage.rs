@@ -1,6 +1,8 @@
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::process;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
 use crate::interpreter::Interpreter;
@@ -16,6 +18,7 @@ pub struct Function {
     pub name: Rc<String>,
     pub params_names: Rc<Vec<String>>,
     pub statements: Rc<Vec<Box<dyn Statement>>>,
+    pub extra_map: Rc<RefCell<HashMap<String, Box<dyn Object>>>>
 }
 
 impl Object for Function  {
@@ -29,7 +32,8 @@ impl Object for Function  {
             Function {
                 name: self.name.clone(),
                 params_names: self.params_names.clone(),
-                statements: self.statements.clone()
+                statements: self.statements.clone(),
+                extra_map: Rc::new(RefCell::new(HashMap::new()))
             }
         )
     }
@@ -71,6 +75,12 @@ impl Function {
             let param_value = param_val.evaluate(out_func_state);
             out_func_state.set_init_variable(param_name, param_value);
         }
+        let extra_datas = self.extra_map.borrow();
+        for (key, value) in extra_datas.iter()  {
+            if let None = out_func_state.get_variable(key) {
+                out_func_state.set_init_variable(key, value.dyn_clone());
+            }
+        }
         Interpreter::run(out_func_state, &self.statements);
 
         let ret_value = match out_func_state.get_variable(&return_key) {
@@ -98,6 +108,7 @@ pub fn clock_declaration() -> Function {
     Function { 
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
-        statements: Rc::new(Vec::new())
+        statements: Rc::new(Vec::new()),
+        extra_map: Rc::new(RefCell::new(HashMap::new()))
     }
 }

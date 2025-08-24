@@ -119,12 +119,18 @@ impl Statement for ReturnStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let value = self.expression.evaluate(state);
         let return_key = String::from("return");
-
+        let mut ind = 0;
         for hashmap in state.vars_nodes_map.iter_mut().rev() {
             if let Some(_val) = hashmap.get(&return_key) {
                 hashmap.insert(return_key.clone(), value.dyn_clone());
             }
+            else {
+                ind += 1;
+            }
         } 
+        for _ in 0..ind {
+            state.end_child_block();
+        }
         *current_stmt_ind = MAX;
     }
 }
