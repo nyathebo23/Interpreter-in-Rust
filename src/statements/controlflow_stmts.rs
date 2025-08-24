@@ -147,13 +147,13 @@ pub fn if_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
 
 
     let mut steps_to_end = stmt_count - size_ifblock;
-    result_stmts.push(go_to(steps_to_end));
+    result_stmts.push(go_to(steps_to_end + 1));
 
     for ((size_block, stmt), cond) in sizes_block.iter().zip(&mut elif_stmts).zip(conditions) {
         result_stmts.push(jump(cond, *size_block));
         result_stmts.append(stmt);
         steps_to_end = steps_to_end - size_block;
-        result_stmts.push(go_to(steps_to_end ));
+        result_stmts.push(go_to(steps_to_end + 1));
     }
     if let Some(mut else_statement) = else_stmt {
         result_stmts.append(&mut else_statement);
