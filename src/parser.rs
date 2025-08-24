@@ -146,7 +146,7 @@ impl Parser<'_> {
     }
 
     fn func_call_params(&mut self, func_obj_expr: Box<dyn Expression>) -> Box<dyn Expression> {
-        if self.current_index > self.size - 2 {
+        if self.current_index > self.size - 2 || self.size == 1 {
             return func_obj_expr;
         }
         let current_token = self.current_token();
