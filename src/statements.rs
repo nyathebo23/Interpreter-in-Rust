@@ -164,10 +164,6 @@ impl Statement for FunctionDeclStatement {
         // }
 
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
-        let min = state.get_variable(&String::from("min"));
-        if let Some(valmin) = min {
-            state.set_global_variable(&String::from("min"), valmin);
-        }
         *current_stmt_ind += 1;
     }
 }

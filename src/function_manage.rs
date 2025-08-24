@@ -28,12 +28,17 @@ impl Object for Function  {
     }
 
     fn dyn_clone(&self) -> Box<dyn Object> {
+        let extramap = self.extra_map.borrow();
+        let mut new_extramap: HashMap<String, Box<dyn Object>> = HashMap::new();
+        for (k, v) in extramap.iter() {
+            new_extramap.insert(k.to_string(), v.dyn_clone());
+        }
         Box::new(
             Function {
                 name: self.name.clone(),
                 params_names: self.params_names.clone(),
                 statements: self.statements.clone(),
-                extra_map: Rc::new(RefCell::new(HashMap::new()))
+                extra_map: Rc::new(RefCell::new(new_extramap))
             }
         )
     }
@@ -76,11 +81,7 @@ impl Function {
             out_func_state.set_init_variable(param_name, param_value);
         }
         let extra_datas = self.extra_map.borrow();
-        if self.name.to_string() == "filter" {
-            for (k, v) in extra_datas.iter() {
-                println!("key val 2 {} {}", k, v.to_string());
-            }
-        }
+   
         for (key, value) in extra_datas.iter()  {
             if let None = out_func_state.get_variable(key) {
                 out_func_state.set_init_variable(key, value.dyn_clone());
@@ -89,7 +90,7 @@ impl Function {
         Interpreter::run(out_func_state, &self.statements);
 
         let ret_value = match out_func_state.get_variable(&return_key) {
-            Some(ret_val ) => ret_val.dyn_clone(),
+            Some(ret_val ) => ret_val,
             None => Box::new(NIL)
         };
 

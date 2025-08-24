@@ -18,14 +18,14 @@ impl BlockScopes {
         }
     }
 
-    pub fn set_global_variable(&mut self, identifier: &String, value: Box<dyn Object>) {
-        match self.vars_nodes_map.get_mut(0) {
-            Some(node_map) => {
-                node_map.insert(identifier.to_string(), value);
-            },
-            None => {}
-        };
-    }
+    // pub fn set_global_variable(&mut self, identifier: &String, value: Box<dyn Object>) {
+    //     match self.vars_nodes_map.get_mut(0) {
+    //         Some(node_map) => {
+    //             node_map.insert(identifier.to_string(), value);
+    //         },
+    //         None => {}
+    //     };
+    // }
 
     // pub fn get_global_variable(&mut self, identifier: &String) -> Option<Box<dyn Object>> {
     //     if let Some(hashmap) = self.vars_nodes_map.first() {
