@@ -79,7 +79,7 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     if let Some(varname) = var {
         println!("{} ", varname.to_string());
     }
-        println!("{} ", interpreter.state.depth);
+    
 
     let statements = block_func_statement(interpreter);
     
