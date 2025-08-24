@@ -75,6 +75,8 @@ impl Function {
             let param_value = param_val.evaluate(out_func_state);
             out_func_state.set_init_variable(param_name, param_value);
         }
+
+        Interpreter::run(out_func_state, &self.statements);
         let extra_datas = self.extra_map.borrow();
         for (key, value) in extra_datas.iter()  {
             if let None = out_func_state.get_variable(key) {
@@ -82,8 +84,6 @@ impl Function {
                 println!("{} {}", key, value.to_string())
             }
         }
-        Interpreter::run(out_func_state, &self.statements);
-
         let ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
             None => Box::new(NIL)
