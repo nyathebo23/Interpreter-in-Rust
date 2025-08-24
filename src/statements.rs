@@ -1,6 +1,6 @@
 
 
-use std::{usize::MAX};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
 use crate::{function_manage::Function, parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression}};
 mod simple_statement;
@@ -150,13 +150,27 @@ pub struct FunctionDeclStatement {
 
 impl Statement for FunctionDeclStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
-        state.define_function(&self.function_decl.name.clone(), self.function_decl.clone());
-        let min = state.get_variable(&String::from("min"));
-        if let Some(valmin) = min {
-            println!("min {} ", valmin.to_string());
-        }
+        let func_copy = Function {
+            name: self.function_decl.name.clone(),
+            params_names: self.function_decl.params_names.clone(),
+            statements: self.function_decl.statements.clone(),
+            extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
+        };
+        state.define_function(&self.function_decl.name.clone(), func_copy);
+        // let min = state.get_variable(&String::from("min"));
+        // if let Some(valmin) = min {
+        //     println!("min {} ", valmin.to_string());
+        // }
         *current_stmt_ind += 1;
     }
+}
+
+fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
+    let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
+    for hashmap in &state.vars_nodes_map {
+        result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
+    }
+    result_map
 }
 
 fn get_condition(cond_option: Box<dyn Object>) -> bool {
