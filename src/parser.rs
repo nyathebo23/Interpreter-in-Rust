@@ -102,8 +102,7 @@ impl Parser<'_> {
             }
         };
         self.next();
-        expr
-        //self.func_call_params(expr)
+        self.func_call_params(expr)
     }
 
     fn exit_error(&self, line: &u32, text: &str) {
@@ -147,6 +146,9 @@ impl Parser<'_> {
     }
 
     fn func_call_params(&mut self, func_obj_expr: Box<dyn Expression>) -> Box<dyn Expression> {
+        if self.current_index > self.size - 2 {
+            return func_obj_expr;
+        }
         let current_token = self.current_token();
         let line = current_token.line;
         if current_token.token_type == TokenType::LEFTPAREN {
