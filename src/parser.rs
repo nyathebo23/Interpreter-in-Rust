@@ -102,7 +102,8 @@ impl Parser<'_> {
             }
         };
         self.next();
-        self.func_call_params(expr)
+        expr
+        //self.func_call_params(expr)
     }
 
     fn exit_error(&self, line: &u32, text: &str) {
