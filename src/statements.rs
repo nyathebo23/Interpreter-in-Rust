@@ -123,6 +123,7 @@ impl Statement for ReturnStatement {
         for hashmap in state.vars_nodes_map.iter_mut().rev() {
             if let Some(_val) = hashmap.get(&return_key) {
                 hashmap.insert(return_key.clone(), value.dyn_clone());
+                break;
             }
             else {
                 ind += 1;
