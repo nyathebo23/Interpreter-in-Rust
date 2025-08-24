@@ -33,6 +33,9 @@ impl Interpreter<'_> {
                 for item in map.values() {
                     println!(" {}", item.to_string())
                 }
+                for key in map.keys() {
+                    println!(" {}", key.to_string())
+                }
             }
             println!("{} {}", state.vars_nodes_map.len(), index);
 
