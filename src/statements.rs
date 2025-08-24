@@ -129,9 +129,9 @@ impl Statement for ReturnStatement {
                 ind += 1;
             }
         } 
-        // for _ in 0..ind {
-        //     state.end_child_block();
-        // }
+        for _ in 0..ind {
+            state.end_child_block();
+        }
         *current_stmt_ind = MAX;
     }
 }
@@ -156,27 +156,17 @@ impl Statement for FunctionDeclStatement {
             statements: self.function_decl.statements.clone(),
             extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
         };
-        if func_copy.name.to_string() == "filter" {
-            let bor = func_copy.extra_map.borrow();
-            for (k, v) in bor.iter() {
-                println!("key val {} {}", k, v.to_string());
-            }
-        }
+        // if func_copy.name.to_string() == "filter" {
+        //     let bor = func_copy.extra_map.borrow();
+        //     for (k, v) in bor.iter() {
+        //         println!("key val {} {}", k, v.to_string());
+        //     }
+        // }
 
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         let min = state.get_variable(&String::from("min"));
         if let Some(valmin) = min {
-            println!("min {} name_fun {}", valmin.to_string(), self.function_decl.name.clone(),);
-        }
-        if let Some(f) = state.get_variable(&String::from("greaterThanY")) {
-            println!("greaterY {}", f.to_string());
-            let op = f.as_function().unwrap().extra_map.borrow();
-            for (k, v) in op.iter() {
-                println!("key val greater X {} {}", k, v.to_string());
-            }
-            if let Some(min) = op.get(&String::from("min")) {
-                println!("new min {}", min.to_string());
-            }
+            state.set_global_variable(&String::from("min"), valmin);
         }
         *current_stmt_ind += 1;
     }
