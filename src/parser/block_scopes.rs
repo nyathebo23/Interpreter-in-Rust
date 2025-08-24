@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use crate::{function_manage::Function, parser::declarations::{Object}};
+use crate::{function_manage::Function, parser::declarations::Object};
 
 
 pub struct BlockScopes {
-    vars_nodes_map: Vec<HashMap<String, Box<dyn Object>>>,
+    pub vars_nodes_map: Vec<HashMap<String, Box<dyn Object>>>,
     pub depth: usize
 }
 

@@ -2,11 +2,12 @@ use std::borrow::Cow;
 use std::process;
 use std::rc::Rc;
 
-use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
+use crate::interpreter::Interpreter;
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Number, Object, ValueObjTrait, NIL};
 use crate::parser::expressions::{Expression};
-use crate::statements::{BlockFuncStatement, Statement};
+use crate::statements::{Statement};
 use crate::parser::declarations::Type;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -14,7 +15,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct Function {
     pub name: Rc<String>,
     pub params_names: Rc<Vec<String>>,
-    pub statement: Rc<BlockFuncStatement>,
+    pub statements: Rc<Vec<Box<dyn Statement>>>,
 }
 
 impl Object for Function  {
@@ -28,7 +29,7 @@ impl Object for Function  {
             Function {
                 name: self.name.clone(),
                 params_names: self.params_names.clone(),
-                statement: self.statement.clone()
+                statements: self.statements.clone()
             }
         )
     }
@@ -55,23 +56,25 @@ impl Function {
 
     pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> Box<dyn Object> {
         let (expect_params_len, recv_params_len) = (self.params_names.len(), params.len());
-        if self.params_names.len() != params.len() {
+        if expect_params_len != recv_params_len {
             handle_error(line, ErrorType::RuntimeError, 
                 format!("Expected {} arguments but got {}", expect_params_len, recv_params_len).as_str());
-            process::exit(SYNTAXIC_ERROR_CODE);
+            process::exit(RUNTIME_ERROR_CODE);
         }
         if self.name.as_str() == "clock" {
             return Box::new(Number(clock() as f64));
         }
         out_func_state.start_child_block();
+        let return_key = String::from("return");
+        out_func_state.set_init_variable(&return_key, Box::new(NIL));
         for (param_name, param_val) in self.params_names.iter().zip(params.iter()) {
             let param_value = param_val.evaluate(out_func_state);
             out_func_state.set_init_variable(param_name, param_value);
         }
-        self.statement.run(out_func_state);
+        Interpreter::run(out_func_state, &self.statements);
 
-        let ret_value = match out_func_state.get_variable(&String::from("return")) {
-            Some(ret_value ) => ret_value,
+        let ret_value = match out_func_state.get_variable(&return_key) {
+            Some(ret_val ) => ret_val,
             None => Box::new(NIL)
         };
         out_func_state.end_child_block();
@@ -94,8 +97,6 @@ pub fn clock_declaration() -> Function {
     Function { 
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
-        statement: Rc::new(BlockFuncStatement {
-            statements: Vec::new()
-        })
+        statements: Rc::new(Vec::new())
     }
 }
