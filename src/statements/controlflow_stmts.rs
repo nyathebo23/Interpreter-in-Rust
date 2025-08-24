@@ -21,6 +21,7 @@ pub fn block_scope(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
             TokenType::RIGHTBRACE => {
                 interpreter.parser.next();
                 stmts.push(Box::new(EndBlockStatement{}));
+                return stmts;
             },
             TokenType::FUN => {
                 stmts.push(Box::new(func_decl_statement(interpreter)));
