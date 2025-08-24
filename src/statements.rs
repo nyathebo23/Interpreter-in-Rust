@@ -169,7 +169,7 @@ impl Statement for FunctionDeclStatement {
             println!("min {} name_fun {}", valmin.to_string(), self.function_decl.name.clone(),);
         }
         if let Some(f) = state.get_variable(&String::from("greaterThanY")) {
-            println!("{}", f.to_string());
+            println!("greaterY{}", f.to_string());
             let op = f.as_function().unwrap().extra_map.borrow();
             if let Some(min) = op.get(&String::from("min")) {
                 println!("new min {}", min.to_string());
