@@ -77,7 +77,7 @@ impl Function {
             Some(ret_val ) => ret_val,
             None => Box::new(NIL)
         };
-        println!("{}", ret_value.to_string());
+
         out_func_state.end_child_block();
         ret_value
     }
