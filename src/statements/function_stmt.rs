@@ -6,8 +6,7 @@ use std::rc::Rc;
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::function_manage::Function;
 use crate::interpreter::{Interpreter};
-use crate::parser::block_scopes::BlockScopes;
-use crate::parser::declarations::{Object, NIL};
+use crate::parser::declarations::{NIL};
 use crate::parser::expressions::{Expression, LiteralExpr};
 use crate::scanner::declarations::TokenType;
 use crate::statements::controlflow_stmts::block_statements;
@@ -80,24 +79,15 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
         println!("{} ", varname.to_string());
     }
     
-
     let statements = block_func_statement(interpreter);
     
     let function =     Function {
         name: ident_str.into(),
         params_names: params.into(),
-        statements: Rc::new(statements),
-        extra_map: Rc::new(RefCell::new(get_out_variables(&interpreter.state)))
+        statements: Rc::new(RefCell::new(statements)),
+        extra_map: Rc::new(RefCell::new(HashMap::new()))
     };
     FunctionDeclStatement {
         function_decl: function,
     }
-}
-
-fn get_out_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
-    let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
-    for hashmap in &state.vars_nodes_map {
-        result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
-    }
-    result_map
 }

@@ -21,23 +21,14 @@ impl Interpreter<'_> {
         while self.parser.current_index < self.parser.size {
             stmts.append(&mut statement(self));
         }
-        Self::run(&mut self.state, &stmts);
+        Self::run(&mut self.state, &mut stmts);
     }
 
-    pub fn run(state: &mut BlockScopes, stmts: &Vec<Box<dyn Statement>>) {
+    pub fn run(state: &mut BlockScopes, stmts: &mut Vec<Box<dyn Statement>>) {
         let mut index = 0;
         while index < stmts.len() {
-            let statement: &Box<dyn Statement>  = &stmts[index];
+            let statement: &mut Box<dyn Statement>  = &mut stmts[index];
             statement.run(state, &mut index);
-            // for map in &state.vars_nodes_map {
-            //     for item in map.values() {
-            //         println!(" {}", item.to_string())
-            //     }
-            //     for key in map.keys() {
-            //         println!(" {}", key.to_string())
-            //     }
-            // }
-            // println!("{} {}", state.vars_nodes_map.len(), index);
         }
     }
 
