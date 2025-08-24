@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::function_manage::Function;
-use crate::interpreter::Interpreter;
+use crate::interpreter::{Interpreter};
 use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Object, NIL};
 use crate::parser::expressions::{Expression, LiteralExpr};
@@ -79,6 +79,8 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     if let Some(varname) = var {
         println!("{} ", varname.to_string());
     }
+        println!("{} ", interpreter.state.depth);
+
     let statements = block_func_statement(interpreter);
     
     let function =     Function {
