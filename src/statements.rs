@@ -157,10 +157,10 @@ impl Statement for FunctionDeclStatement {
             extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
         };
         state.define_function(&self.function_decl.name.clone(), func_copy);
-        // let min = state.get_variable(&String::from("min"));
-        // if let Some(valmin) = min {
-        //     println!("min {} ", valmin.to_string());
-        // }
+        let min = state.get_variable(&String::from("min"));
+        if let Some(valmin) = min {
+            println!("min {} name_fun {}", valmin.to_string(), self.function_decl.name.clone(),);
+        }
         *current_stmt_ind += 1;
     }
 }
