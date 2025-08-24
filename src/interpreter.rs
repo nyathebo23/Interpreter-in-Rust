@@ -21,7 +21,6 @@ impl Interpreter<'_> {
         while self.parser.current_index < self.parser.size {
             stmts.append(&mut statement(self));
         }
-        println!("{}", self.state.vars_nodes_map.len());
         Self::run(&mut self.state, &stmts);
     }
 
@@ -30,6 +29,8 @@ impl Interpreter<'_> {
         while index < stmts.len() {
             let statement: &Box<dyn Statement>  = &stmts[index];
             statement.run(state, &mut index);
+            println!("{} {}", state.vars_nodes_map.len(), index);
+
         }
     }
 
