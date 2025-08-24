@@ -151,6 +151,10 @@ pub struct FunctionDeclStatement {
 impl Statement for FunctionDeclStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         state.define_function(&self.function_decl.name.clone(), self.function_decl.clone());
+        let min = state.get_variable(&String::from("min"));
+        if let Some(valmin) = min {
+            println!("min {} ", valmin.to_string());
+        }
         *current_stmt_ind += 1;
     }
 }
