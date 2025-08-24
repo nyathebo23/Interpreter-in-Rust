@@ -131,7 +131,6 @@ impl Statement for ReturnStatement {
         } 
         for _ in 0..ind {
             state.end_child_block();
-            println!("{} ", ind);
         }
         *current_stmt_ind = MAX;
     }
