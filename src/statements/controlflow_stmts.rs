@@ -157,6 +157,7 @@ pub fn if_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
     }
     if let Some(mut else_statement) = else_stmt {
         result_stmts.append(&mut else_statement);
+        result_stmts.push(go_to(1));
     }
     result_stmts
 }
