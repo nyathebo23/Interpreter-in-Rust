@@ -21,7 +21,7 @@ impl Interpreter<'_> {
         while self.parser.current_index < self.parser.size {
             stmts.append(&mut statement(self));
         }
-
+        Self::run(&mut self.state, &stmts);
     }
 
     pub fn run(state: &mut BlockScopes, stmts: &Vec<Box<dyn Statement>>) {
