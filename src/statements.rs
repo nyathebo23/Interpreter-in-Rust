@@ -108,6 +108,9 @@ impl Statement for EndBlockStatement {
     }
 }
 
+
+
+
 pub struct ReturnStatement {
     pub expression: Box<dyn Expression>,
 }
@@ -115,10 +118,9 @@ pub struct ReturnStatement {
 impl Statement for ReturnStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         let value = self.expression.evaluate(state);
-        println!("{} ", value.to_string());
         let return_key = String::from("return");
-        while state.vars_nodes_map.len() > 1 {
-            let mut hashmap = state.vars_nodes_map.pop().unwrap();
+
+        for hashmap in state.vars_nodes_map.iter_mut().rev() {
             if let Some(_val) = hashmap.get(&return_key) {
                 hashmap.insert(return_key.clone(), value.dyn_clone());
             }
@@ -131,8 +133,8 @@ impl ReturnStatement  {
     pub fn new(expr: Box<dyn Expression>) -> ReturnStatement {
         ReturnStatement { expression: expr }
     }
-
 }
+
 
 pub struct FunctionDeclStatement {
     function_decl: Function,
