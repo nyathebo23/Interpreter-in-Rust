@@ -89,7 +89,7 @@ impl Function {
         Interpreter::run(out_func_state, &self.statements);
 
         let ret_value = match out_func_state.get_variable(&return_key) {
-            Some(ret_val ) => ret_val,
+            Some(ret_val ) => ret_val.dyn_clone(),
             None => Box::new(NIL)
         };
 
