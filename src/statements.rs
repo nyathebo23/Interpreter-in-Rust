@@ -2,7 +2,8 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
-use crate::{function_manage::{Function, RefObject}, parser::{block_scopes::BlockScopes, declarations::{Object, Type}, expressions::Expression}};
+use crate::{function_manage::{Function, RefObject}};
+use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
 mod simple_statement;
 pub mod controlflow_stmts;
 pub mod function_stmt;
@@ -175,9 +176,7 @@ impl FunctionDeclStatement {
         let mut result_map: HashMap<String, RefObject>  = HashMap::new();
         for hashmap in &state.vars_nodes_map {
             for (key, val) in hashmap {
-                if val.borrow().get_type() != Type::FUNCTION {
-                    result_map.insert(key.clone(), val.clone());
-                }
+                result_map.insert(key.clone(), val.clone());
             }
         }
         result_map
