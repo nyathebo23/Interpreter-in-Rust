@@ -90,4 +90,13 @@ impl BlockScopes {
         }
         None
     }
+
+    pub fn get_variable_from(&mut self, identifier: &String, depth: usize) -> Option<Box<dyn Object>> {
+        for hashmap in self.vars_nodes_map[depth..].iter().rev() {
+            if let Some(value) = hashmap.get(identifier) {
+                return Some(value.dyn_clone());
+            }
+        }
+        None
+    }
 }

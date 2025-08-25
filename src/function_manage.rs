@@ -81,14 +81,20 @@ impl Function {
             out_func_state.set_init_variable(param_name, param_value);
         }
         let extra_datas = self.extra_map.borrow();
-   
+        let mut out_variables_to_edit = Vec::new();
+        let depth = out_func_state.depth;
         for (key, value) in extra_datas.iter()  {
-            if let None = out_func_state.get_variable(key) {
+            if let None = out_func_state.get_variable_from(key, depth) {
                 out_func_state.set_init_variable(key, value.dyn_clone());
+                out_variables_to_edit.push(key);
             }
         }
         Interpreter::run(out_func_state, &self.statements);
-
+        for var in out_variables_to_edit {
+            let new_value = out_func_state.get_variable(var).unwrap();
+            let mut extra_datas = self.extra_map.borrow_mut();
+            extra_datas.insert(var.to_string(), new_value);
+        }
         let ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
             None => Box::new(NIL)
