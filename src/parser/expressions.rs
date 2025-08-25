@@ -59,7 +59,6 @@ impl Expression for FunctionCallExpr  {
         else {
             (func_name.as_function().unwrap()).call(&self.params, state_scope, &self.line)
         }
-
     }
 
     fn to_string(&self) -> String {

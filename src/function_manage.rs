@@ -83,9 +83,7 @@ impl Function {
         let extra_datas = self.extra_map.borrow();
    
         for (key, value) in extra_datas.iter()  {
-            if let None = out_func_state.get_variable(key) {
-                out_func_state.set_init_variable(key, value.dyn_clone());
-            }
+            out_func_state.set_init_variable(key, value.dyn_clone());
         }
         Interpreter::run(out_func_state, &self.statements);
 

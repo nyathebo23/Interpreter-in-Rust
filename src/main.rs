@@ -78,8 +78,6 @@ fn main() {
             let parser = Parser::new(&tokens, 0);
             let mut interpreter = Interpreter::new(parser);
             interpreter.compile();
-
-            
         },
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();
