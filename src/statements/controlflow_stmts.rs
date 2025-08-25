@@ -102,6 +102,7 @@ pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType, is_
             if !is_in_func {
                 let line = interpreter.parser.current_token().line;
                 handle_error(&line, ErrorType::SyntacticError, "Error at 'return': Can't return from top-level code.");
+                process::exit(SYNTAXIC_ERROR_CODE);
             }
             stmts.push(Box::new(return_statement(interpreter)));
         },
