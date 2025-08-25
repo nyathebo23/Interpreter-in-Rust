@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::{function_manage::{Function, RefObject}, parser::declarations::Object};
+use crate::{function_manage::{Function, RefObject}, parser::declarations::{Class, Object}};
 
 
 
@@ -53,6 +53,10 @@ impl BlockScopes {
     //     }
     //     None
     // }
+
+    pub fn define_class(&mut self, classname: &String, class: Class) {
+        self.set_init_variable(classname, Box::new(class));
+    }
 
     pub fn start_child_block(&mut self) {
         self.vars_nodes_map.push(HashMap::new());

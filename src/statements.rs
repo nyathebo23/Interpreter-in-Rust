@@ -2,9 +2,10 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
-use crate::{function_manage::{Function, RefObject}};
+use crate::{function_manage::{Function, RefObject}, parser::declarations::Class};
 use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
 mod simple_statement;
+pub mod classes_decl_stmt;
 pub mod controlflow_stmts;
 pub mod function_stmt;
 pub trait Statement {
@@ -119,8 +120,6 @@ impl Statement for EndBlockStatement {
 }
 
 
-
-
 pub struct ReturnStatement {
     pub expression: Box<dyn Expression>,
 }
@@ -180,5 +179,17 @@ impl FunctionDeclStatement {
             }
         }
         result_map
+    }
+}
+
+
+pub struct ClassDeclStatement {
+    class: Class
+}
+
+impl Statement for ClassDeclStatement {
+    fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+        state.define_class(&self.class.name, self.class.clone());
+        *current_stmt_ind += 1;
     }
 }

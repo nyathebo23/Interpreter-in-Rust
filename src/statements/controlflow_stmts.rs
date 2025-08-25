@@ -2,6 +2,7 @@ use std::process;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::interpreter::Interpreter; 
+use crate::statements::classes_decl_stmt::class_decl_statement;
 use crate::statements::function_stmt::{func_decl_statement, return_statement};
 use crate::statements::simple_statement::{expr_statement, print_statement, var_statement};
 use crate::statements::{ BackToStatement, EndBlockStatement, ExprStatement, GoToStatement, JumpStatement, StartBlockStatement, Statement};
@@ -80,6 +81,9 @@ fn statement_condition(interpreter: &mut Interpreter, is_in_func: bool) -> Vec<B
 pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType, is_in_func: bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     match tokentype {
+        TokenType::CLASS => {
+            stmts.push(Box::new(class_decl_statement(interpreter)));
+        },
         TokenType::IDENTIFIER => {
             stmts.push(Box::new(expr_statement(interpreter)));
         },

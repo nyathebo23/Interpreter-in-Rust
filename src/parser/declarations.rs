@@ -8,8 +8,8 @@ pub enum Type {
     NUMBER,
     BOOLEAN,
     NIL,
-    FUNCTION
-    //CLASSOBJ  
+    FUNCTION,
+    CLASS  
 }
 pub trait Object: ValueObjTrait + ToString {
     fn to_str(&self) -> Cow<'static, str>;
@@ -47,6 +47,10 @@ pub struct Bool (pub bool);
 #[derive(Clone)]
 pub struct NIL;
 
+#[derive(Clone)]
+pub struct Class {
+    pub name: String,
+}
 
 
 impl Object for Str {
@@ -98,6 +102,22 @@ impl Object for NIL  {
     }
 }
 
+impl Object for Class  {
+    fn to_str(&self) -> Cow<'static, str> {
+        return Cow::Owned(self.name.to_string());
+    }    
+
+    fn get_type(&self) -> Type {
+        Type::CLASS
+    }
+
+    fn dyn_clone(&self) -> Box<dyn Object> {
+        Box::new(Class{
+            name: self.name.clone()
+        })
+    }
+}
+
 
 impl ToString for Str {
     fn to_string(&self) -> String {
@@ -120,6 +140,12 @@ impl ToString for Bool  {
 impl ToString for NIL  {
     fn to_string(&self) -> String {
         "nil".to_string()
+    }
+}
+
+impl ToString for Class {
+    fn to_string(&self) -> String {
+        self.name.to_string()
     }
 }
 
@@ -193,3 +219,5 @@ impl ValueObjTrait for NIL  {
         Some(&Bool(false))
     }
 }
+
+impl ValueObjTrait for Class {}
