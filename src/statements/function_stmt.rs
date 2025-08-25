@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::process;
 use std::rc::Rc;
@@ -85,7 +84,7 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
         name: ident_str.into(),
         params_names: params.into(),
         statements: Rc::new(statements),
-        extra_map: Rc::new(RefCell::new(HashMap::new()))
+        extra_map: HashMap::new()
     };
     FunctionDeclStatement {
         function_decl: function,

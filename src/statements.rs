@@ -2,7 +2,7 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
-use crate::{function_manage::Function, parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression}};
+use crate::{function_manage::{Function, RefObject}, parser::{block_scopes::BlockScopes, declarations::{Object, Type}, expressions::Expression}};
 mod simple_statement;
 pub mod controlflow_stmts;
 pub mod function_stmt;
@@ -163,7 +163,7 @@ impl Statement for FunctionDeclStatement {
             name: self.function_decl.name.clone(),
             params_names: self.function_decl.params_names.clone(),
             statements: self.function_decl.statements.clone(),
-            extra_map: Rc::new(RefCell::new(FunctionDeclStatement::get_outfunc_variables(&state)))
+            extra_map: FunctionDeclStatement::get_outfunc_variables(&state)
         };
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         *current_stmt_ind += 1;
@@ -171,10 +171,14 @@ impl Statement for FunctionDeclStatement {
 }
 
 impl FunctionDeclStatement {
-    fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
-        let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
+    fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, RefObject> {
+        let mut result_map: HashMap<String, RefObject>  = HashMap::new();
         for hashmap in &state.vars_nodes_map {
-            result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
+            for (key, val) in hashmap {
+                if val.get_type() != Type::FUNCTION {
+                    result_map.insert(key.clone(), Rc::new(RefCell::new(val.dyn_clone())));
+                }
+            }
         }
         result_map
     }

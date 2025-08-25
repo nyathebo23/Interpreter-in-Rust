@@ -13,12 +13,15 @@ use crate::statements::{Statement};
 use crate::parser::declarations::Type;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+
+pub type RefObject = Rc<RefCell<Box<dyn Object>>>;
+
 #[derive(Clone)]
 pub struct Function {
     pub name: Rc<String>,
     pub params_names: Rc<Vec<String>>,
     pub statements: Rc<Vec<Box<dyn Statement>>>,
-    pub extra_map: Rc<RefCell<HashMap<String, Box<dyn Object>>>>
+    pub extra_map: HashMap<String, RefObject>
 }
 
 impl Object for Function  {
@@ -28,17 +31,17 @@ impl Object for Function  {
     }
 
     fn dyn_clone(&self) -> Box<dyn Object> {
-        let extramap = self.extra_map.borrow();
-        let mut new_extramap: HashMap<String, Box<dyn Object>> = HashMap::new();
-        for (k, v) in extramap.iter() {
-            new_extramap.insert(k.to_string(), v.dyn_clone());
+
+        let mut new_extramap: HashMap<String, RefObject> = HashMap::new();
+        for (k, v) in self.extra_map.iter() {
+            new_extramap.insert(k.to_string(), v.clone());
         }
         Box::new(
             Function {
                 name: self.name.clone(),
                 params_names: self.params_names.clone(),
                 statements: self.statements.clone(),
-                extra_map: Rc::new(RefCell::new(new_extramap))
+                extra_map: new_extramap
             }
         )
     }
@@ -80,20 +83,22 @@ impl Function {
             let param_value = param_val.evaluate(out_func_state);
             out_func_state.set_init_variable(param_name, param_value);
         }
-        let extra_datas = self.extra_map.borrow();
+
         let mut out_variables_to_edit = Vec::new();
         let depth = out_func_state.depth;
-        for (key, value) in extra_datas.iter()  {
+        for (key, value) in self.extra_map.iter()  {
             if let None = out_func_state.get_variable_from(key, depth) {
-                out_func_state.set_init_variable(key, value.dyn_clone());
+                let var_value = value.borrow();
+                out_func_state.set_init_variable(key, var_value.dyn_clone());
                 out_variables_to_edit.push(key);
             }
         }
         Interpreter::run(out_func_state, &self.statements);
-        let mut extra_datas_mut = self.extra_map.borrow_mut();
+
         for var in out_variables_to_edit {
             let new_value = out_func_state.get_variable(var).unwrap();
-            extra_datas_mut.insert(var.to_string(), new_value);
+            let mut val_mut = self.extra_map.get(var).unwrap().borrow_mut();
+            *val_mut = new_value;
         }
         let ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
@@ -121,6 +126,6 @@ pub fn clock_declaration() -> Function {
         name: "clock".to_string().into(), 
         params_names: Vec::new().into(), 
         statements: Rc::new(Vec::new()),
-        extra_map: Rc::new(RefCell::new(HashMap::new()))
+        extra_map: HashMap::new()
     }
 }
