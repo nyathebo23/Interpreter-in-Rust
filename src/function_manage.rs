@@ -80,7 +80,7 @@ impl Function {
             let param_value = param_val.evaluate(out_func_state);
             out_func_state.set_init_variable(param_name, param_value);
         }
-        let extra_datas = self.extra_map.borrow();
+        let extra_datas = self.extra_map.borrow_mut();
         let mut out_variables_to_edit = Vec::new();
         let depth = out_func_state.depth;
         for (key, value) in extra_datas.iter()  {
@@ -90,10 +90,10 @@ impl Function {
             }
         }
         Interpreter::run(out_func_state, &self.statements);
+        let mut extra_datas_mut = self.extra_map.borrow_mut();
         for var in out_variables_to_edit {
             let new_value = out_func_state.get_variable(var).unwrap();
-            let mut extra_datas = self.extra_map.borrow_mut();
-            extra_datas.insert(var.to_string(), new_value);
+            extra_datas_mut.insert(var.to_string(), new_value);
         }
         let ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
