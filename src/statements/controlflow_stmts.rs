@@ -24,6 +24,11 @@ pub fn block_scope(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
                         format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
                         process::exit(SYNTAXIC_ERROR_CODE);
                 }
+                if var_stmt.expression.contains_identifier(&var_stmt.name) {
+                    handle_error(&line, ErrorType::SyntacticError, 
+                        format!("Error at {}: Can't read local variable in its own initializer.", var_stmt.name.clone()).as_str());
+                        process::exit(SYNTAXIC_ERROR_CODE);
+                }
                 var_stmts_ident.push(var_stmt.name.clone());
                 stmts.push(Box::new(var_stmt));
             },

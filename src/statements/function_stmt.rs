@@ -40,6 +40,11 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
                         format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
                         process::exit(SYNTAXIC_ERROR_CODE);
                 }
+                if var_stmt.expression.contains_identifier(&var_stmt.name) {
+                    handle_error(&line, ErrorType::SyntacticError, 
+                        format!("Error at {}: Can't read local variable in its own initializer.", var_stmt.name.clone()).as_str());
+                        process::exit(SYNTAXIC_ERROR_CODE);
+                }
                 var_stmts_ident.push(var_stmt.name.clone());
                 stmts.push(Box::new(var_statement(interpreter)));
             },
@@ -91,7 +96,7 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     
     let statements = block_func_statement(interpreter, &params);
     
-    let function =     Function {
+    let function = Function {
         name: ident_str.into(),
         params_names: params.into(),
         statements: Rc::new(statements),
