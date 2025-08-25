@@ -131,7 +131,7 @@ impl Statement for ReturnStatement {
         let mut ind = 0;
         for hashmap in state.vars_nodes_map.iter_mut().rev() {
             if let Some(_val) = hashmap.get(&return_key) {
-                hashmap.insert(return_key.clone(), value.dyn_clone());
+                hashmap.insert(return_key.clone(), Rc::new(RefCell::new(value.dyn_clone())));
                 break;
             }
             else {
@@ -175,8 +175,8 @@ impl FunctionDeclStatement {
         let mut result_map: HashMap<String, RefObject>  = HashMap::new();
         for hashmap in &state.vars_nodes_map {
             for (key, val) in hashmap {
-                if val.get_type() != Type::FUNCTION {
-                    result_map.insert(key.clone(), Rc::new(RefCell::new(val.dyn_clone())));
+                if val.borrow().get_type() != Type::FUNCTION {
+                    result_map.insert(key.clone(), val.clone());
                 }
             }
         }

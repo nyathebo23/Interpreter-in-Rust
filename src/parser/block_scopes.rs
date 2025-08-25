@@ -1,10 +1,12 @@
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::{function_manage::Function, parser::declarations::Object};
+use crate::{function_manage::{Function, RefObject}, parser::declarations::Object};
+
+
 
 
 pub struct BlockScopes {
-    pub vars_nodes_map: Vec<HashMap<String, Box<dyn Object>>>,
+    pub vars_nodes_map: Vec<HashMap<String, RefObject>>,
     pub depth: usize
 }
 
@@ -65,7 +67,7 @@ impl BlockScopes {
     pub fn set_init_variable(&mut self, identifier: &String, value: Box<dyn Object>) {
         match self.vars_nodes_map.get_mut(self.depth) {
             Some(node_map) => {
-                node_map.insert(identifier.to_string(), value);
+                node_map.insert(identifier.to_string(), Rc::new(RefCell::new(value)));
             },
             None => {}
         };
@@ -73,11 +75,10 @@ impl BlockScopes {
 
     pub fn modif_variable(&mut self, identifier: &String, new_value: Box<dyn Object>) {
         for hashmap in self.vars_nodes_map.iter_mut().rev() {
-            match hashmap.get(identifier) {
-                Some(_value) => { 
-                    hashmap.insert(identifier.to_string(), new_value.dyn_clone());    
-                },
-                None => {}
+            if let Some(value) = hashmap.get(identifier) {
+                let mut value_mut = value.borrow_mut();
+                *value_mut = new_value;
+                break;
             } 
         }
     }
@@ -85,7 +86,7 @@ impl BlockScopes {
     pub fn get_variable(&mut self, identifier: &String) -> Option<Box<dyn Object>> {
         for hashmap in self.vars_nodes_map.iter().rev() {
             if let Some(value) = hashmap.get(identifier) {
-                return Some(value.dyn_clone());
+                return Some(value.borrow().dyn_clone());
             }
         }
         None
@@ -94,7 +95,7 @@ impl BlockScopes {
     pub fn get_variable_from(&mut self, identifier: &String, depth: usize) -> Option<Box<dyn Object>> {
         for hashmap in self.vars_nodes_map[depth..].iter().rev() {
             if let Some(value) = hashmap.get(identifier) {
-                return Some(value.dyn_clone());
+                return Some(value.borrow().dyn_clone());
             }
         }
         None
