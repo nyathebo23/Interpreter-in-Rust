@@ -46,7 +46,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
                         process::exit(SYNTAXIC_ERROR_CODE);
                 }
                 var_stmts_ident.push(var_stmt.name.clone());
-                stmts.push(Box::new(var_statement(interpreter)));
+                stmts.push(Box::new(var_stmt));
             },
             TokenType::RIGHTBRACE => {
                 interpreter.parser.next();
