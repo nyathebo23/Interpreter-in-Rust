@@ -11,6 +11,7 @@ use std::process;
 
 pub trait Expression {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object>;
+    fn contains_identifier(&self, ident: &String) -> bool;
     fn to_string(&self) -> String;
 }
 
@@ -61,6 +62,15 @@ impl Expression for FunctionCallExpr  {
         }
     }
 
+    fn contains_identifier(&self, ident: &String) -> bool {
+        for param in self.params.iter() {
+            if param.contains_identifier(ident) {
+                return true;
+            }
+        }
+        self.func.contains_identifier(ident)
+    }
+
     fn to_string(&self) -> String {
         self.func.to_string()
     }
@@ -86,6 +96,10 @@ impl Expression for IdentifierExpr {
         process::exit(RUNTIME_ERROR_CODE);
     }
 
+    fn contains_identifier(&self, ident: &String) -> bool {
+        *ident == self.ident_name
+    }
+
     fn to_string(&self) -> String {
         self.ident_name.to_string()
     }
@@ -96,6 +110,10 @@ impl Expression for LiteralExpr {
         return self.value.dyn_clone();
     }
 
+    fn contains_identifier(&self, _ident: &String) -> bool {
+        false
+    }
+
     fn to_string(&self) -> String {
         self.value.to_string()
     }
@@ -104,6 +122,10 @@ impl Expression for LiteralExpr {
 impl Expression for GroupExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box <dyn Object> {
         return self.value.evaluate(state_scope);
+    }
+
+    fn contains_identifier(&self, ident: &String) -> bool {
+        self.value.contains_identifier(ident)
     }
 
     fn to_string(&self) -> String {
@@ -140,6 +162,10 @@ impl  Expression for UnaryExpr {
                 }
             }
         }
+    }
+
+    fn contains_identifier(&self, ident: &String) -> bool {
+        self.value.contains_identifier(ident)
     }
 
     fn to_string(&self) -> String {
@@ -215,6 +241,10 @@ impl  Expression for BinaryExpr {
                 self.value2.evaluate(state_scope)            
             }        
         }
+    }
+
+    fn contains_identifier(&self, ident: &String) -> bool {
+        self.value1.contains_identifier(ident) || self.value1.contains_identifier(ident)
     }
 
     fn to_string(&self) -> String {

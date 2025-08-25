@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::process;
 use std::rc::Rc;
 
@@ -15,6 +15,7 @@ use crate::statements::{FunctionDeclStatement, ReturnStatement, Statement};
 
 pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     interpreter.parser.next();
+    
     if interpreter.parser.current_token().token_type == TokenType::SEMICOLON {
         let nil_expr: Box<dyn Expression> = Box::new(LiteralExpr{value: Box::new(NIL)});
         interpreter.parser.next();
@@ -25,13 +26,21 @@ pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     ReturnStatement::new(expr)
 }
 
-pub fn block_func_statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
+pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
-
+    let mut var_stmts_ident: Vec<String> = Vec::new(); 
     while interpreter.parser.current_index < interpreter.parser.size {
         let token = interpreter.parser.current_token();
+        let line = token.line;
         match token.token_type {
             TokenType::VAR => {
+                let var_stmt = var_statement(interpreter);
+                if func_params.contains(&var_stmt.name) || var_stmts_ident.contains(&var_stmt.name) {
+                    handle_error(&line, ErrorType::SyntacticError, 
+                        format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
+                        process::exit(SYNTAXIC_ERROR_CODE);
+                }
+                var_stmts_ident.push(var_stmt.name.clone());
                 stmts.push(Box::new(var_statement(interpreter)));
             },
             TokenType::RIGHTBRACE => {
@@ -60,6 +69,7 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     let mut params: Vec<String> = Vec::new();
     interpreter.parser.check_token(TokenType::LEFTPAREN, "(");
     let mut current_token = interpreter.parser.current_token();
+    let line = current_token.line;
     if current_token.token_type != TokenType::RIGHTPAREN {
         loop {
             current_token = interpreter.parser.current_token();
@@ -72,13 +82,14 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
         }
     }
     interpreter.parser.check_token(TokenType::RIGHTPAREN, ")");
-    interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
-    let var = interpreter.state.get_variable(&String::from("min"));
-    if let Some(varname) = var {
-        println!("{} ", varname.to_string());
+
+    if has_duplicates_elmts(&params, line) {
+        process::exit(SYNTAXIC_ERROR_CODE);
     }
+
+    interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
     
-    let statements = block_func_statement(interpreter);
+    let statements = block_func_statement(interpreter, &params);
     
     let function =     Function {
         name: ident_str.into(),
@@ -91,10 +102,14 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     }
 }
 
-// fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
-//     let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
-//     for hashmap in &state.vars_nodes_map {
-//         result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
-//     }
-//     result_map
-// }
+fn has_duplicates_elmts(vec: &Vec<String>, line: u32) -> bool {
+    let mut seen = HashSet::new();
+    for item in vec {
+        if !seen.insert(item.clone()) {
+            handle_error(&line, ErrorType::SyntacticError, 
+                format!("Error at {}: Already a variable with this name in this scope.", item.clone()).as_str());
+            return true; // Duplicate found
+        }
+    }
+    false
+}

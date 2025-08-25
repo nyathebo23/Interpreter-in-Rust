@@ -10,13 +10,22 @@ use crate::parser::{declarations::Bool, expressions::{Expression, LiteralExpr}};
 
 pub fn block_scope(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
+    let mut var_stmts_ident: Vec<String> = Vec::new(); 
     stmts.push(Box::new(StartBlockStatement{}));
     interpreter.parser.next();
     while interpreter.parser.current_index < interpreter.parser.size {
         let token = interpreter.parser.current_token();
+        let line = token.line;
         match token.token_type {
             TokenType::VAR => {
-                stmts.push(Box::new(var_statement(interpreter)));
+                let var_stmt = var_statement(interpreter);
+                if var_stmts_ident.contains(&var_stmt.name) {
+                    handle_error(&line, ErrorType::SyntacticError, 
+                        format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
+                        process::exit(SYNTAXIC_ERROR_CODE);
+                }
+                var_stmts_ident.push(var_stmt.name.clone());
+                stmts.push(Box::new(var_stmt));
             },
             TokenType::RIGHTBRACE => {
                 interpreter.parser.next();
