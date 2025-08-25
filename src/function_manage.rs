@@ -2,19 +2,16 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::process;
 use std::rc::Rc;
-use std::cell::RefCell;
 
 use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
 use crate::interpreter::Interpreter;
 use crate::parser::block_scopes::BlockScopes;
-use crate::parser::declarations::{Number, Object, ValueObjTrait, NIL};
+use crate::parser::declarations::{Number, Object, RefObject, ValueObjTrait, NIL};
 use crate::parser::expressions::{Expression};
 use crate::statements::{Statement};
 use crate::parser::declarations::Type;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-
-pub type RefObject = Rc<RefCell<Box<dyn Object>>>;
 
 #[derive(Clone)]
 pub struct Function {

@@ -16,6 +16,7 @@ mod tokenizer;
 mod statements;
 mod function_manage;
 mod interpreter;
+mod class_manage;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

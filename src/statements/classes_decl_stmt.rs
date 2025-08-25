@@ -1,5 +1,5 @@
+use crate::class_manage::Class;
 use crate::interpreter::Interpreter;
-use crate::parser::declarations::Class;
 use crate::scanner::declarations::TokenType;
 use crate::statements::ClassDeclStatement;
 

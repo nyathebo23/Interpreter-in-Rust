@@ -1,6 +1,7 @@
 
-use std::{borrow::Cow, ops::{Add, Div, Mul, Sub}};
-use crate::{function_manage::Function, scanner::utils::literal_number};
+use std::{borrow::Cow, cell::RefCell, ops::{Add, Div, Mul, Sub}, rc::Rc};
+use crate::{class_manage::{Class, ClassInstance}, function_manage::Function, scanner::utils::literal_number};
+
 
 #[derive(PartialEq)]
 pub enum Type {
@@ -9,8 +10,10 @@ pub enum Type {
     BOOLEAN,
     NIL,
     FUNCTION,
-    CLASS  
+    CLASS,
+    CLASSINSTANCE  
 }
+
 pub trait Object: ValueObjTrait + ToString {
     fn to_str(&self) -> Cow<'static, str>;
     fn get_type(&self) -> Type;
@@ -27,13 +30,23 @@ pub trait ValueObjTrait {
     }
 
     fn as_bool(&self) -> Option<&Bool> {
-        None
+        Some(&Bool(true))
     }
 
     fn as_function(&self) -> Option<&Function> {
         None
     }
+
+    fn as_class(&self) -> Option<&Class> {
+        None
+    }
+    
+    fn as_class_instance(&self) -> Option<&ClassInstance> {
+        None
+    }
 }
+
+pub type RefObject = Rc<RefCell<Box<dyn Object>>>;
 
 #[derive(Clone)]
 pub struct Str (pub String);
@@ -47,10 +60,6 @@ pub struct Bool (pub bool);
 #[derive(Clone)]
 pub struct NIL;
 
-#[derive(Clone)]
-pub struct Class {
-    pub name: String,
-}
 
 
 impl Object for Str {
@@ -102,22 +111,6 @@ impl Object for NIL  {
     }
 }
 
-impl Object for Class  {
-    fn to_str(&self) -> Cow<'static, str> {
-        return Cow::Owned(self.name.to_string());
-    }    
-
-    fn get_type(&self) -> Type {
-        Type::CLASS
-    }
-
-    fn dyn_clone(&self) -> Box<dyn Object> {
-        Box::new(Class{
-            name: self.name.clone()
-        })
-    }
-}
-
 
 impl ToString for Str {
     fn to_string(&self) -> String {
@@ -140,12 +133,6 @@ impl ToString for Bool  {
 impl ToString for NIL  {
     fn to_string(&self) -> String {
         "nil".to_string()
-    }
-}
-
-impl ToString for Class {
-    fn to_string(&self) -> String {
-        self.name.to_string()
     }
 }
 
@@ -220,4 +207,3 @@ impl ValueObjTrait for NIL  {
     }
 }
 
-impl ValueObjTrait for Class {}

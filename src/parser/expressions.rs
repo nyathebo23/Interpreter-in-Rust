@@ -15,7 +15,7 @@ pub trait Expression {
     fn to_string(&self) -> String;
 }
 
-pub struct FunctionCallExpr {
+pub struct CallExpr {
     pub func: Box<dyn Expression>,
     pub params: Vec<Box<dyn Expression>>,
     pub line: u32
@@ -48,18 +48,25 @@ pub struct GroupExpr  {
     pub value: Box<dyn Expression>,
 }
 
-impl Expression for FunctionCallExpr  {
+impl Expression for CallExpr  {
 
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
-        let func_name = self.func.evaluate(state_scope);
-        if func_name.get_type() != Type::FUNCTION {
+        let call_expr = self.func.evaluate(state_scope);
+        if call_expr.get_type() == Type::FUNCTION {
+            let func = call_expr.as_function().unwrap();
+            func.call(&self.params, state_scope, &self.line)
+        }
+        else if call_expr.get_type() == Type::CLASS {
+            let class_call = call_expr.as_class().unwrap();
+            let instance = class_call.call(&self.params, state_scope, &self.line);
+            Box::new(instance)
+        }
+        else {
             handle_error(&self.line, ErrorType::RuntimeError, 
                 "Can only call functions and classes.");
             process::exit(RUNTIME_ERROR_CODE); 
         }
-        else {
-            (func_name.as_function().unwrap()).call(&self.params, state_scope, &self.line)
-        }
+        
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {

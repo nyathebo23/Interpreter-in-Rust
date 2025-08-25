@@ -2,7 +2,9 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
-use crate::{function_manage::{Function, RefObject}, parser::declarations::Class};
+use crate::class_manage::Class;
+use crate::parser::declarations::RefObject;
+use crate::function_manage::Function;
 use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
 mod simple_statement;
 pub mod classes_decl_stmt;

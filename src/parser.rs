@@ -165,7 +165,7 @@ impl Parser<'_> {
             }
             self.check_token(TokenType::RIGHTPAREN, ")");
             let func_expr = Box::new(
-                FunctionCallExpr {
+                CallExpr {
                     func: func_obj_expr,
                     params,
                     line: line

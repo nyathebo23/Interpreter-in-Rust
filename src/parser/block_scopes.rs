@@ -1,6 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-use crate::{function_manage::{Function, RefObject}, parser::declarations::{Class, Object}};
+use crate::{class_manage::Class, function_manage::Function, parser::declarations::{Object, RefObject}};
 
 
 
