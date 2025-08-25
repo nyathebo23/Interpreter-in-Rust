@@ -55,13 +55,22 @@ pub struct JumpStatement {
 
 impl Statement for JumpStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
-        let condition = get_condition(self.condition.evaluate(state));
+        let condition = JumpStatement::get_condition(self.condition.evaluate(state));
         if condition {
             *current_stmt_ind += 1;
         }
         else {
             *current_stmt_ind += self.steps;
 
+        }
+    }
+}
+
+impl JumpStatement {
+    fn get_condition(cond_option: Box<dyn Object>) -> bool {
+        match cond_option.as_bool() {
+            Some(cond) => cond.0,
+            None => false
         }
     }
 }
@@ -154,24 +163,19 @@ impl Statement for FunctionDeclStatement {
             name: self.function_decl.name.clone(),
             params_names: self.function_decl.params_names.clone(),
             statements: self.function_decl.statements.clone(),
-            extra_map: Rc::new(RefCell::new(get_outfunc_variables(&state)))
+            extra_map: Rc::new(RefCell::new(FunctionDeclStatement::get_outfunc_variables(&state)))
         };
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         *current_stmt_ind += 1;
     }
 }
 
-fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
-    let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
-    for hashmap in &state.vars_nodes_map {
-        result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
-    }
-    result_map
-}
-
-fn get_condition(cond_option: Box<dyn Object>) -> bool {
-    match cond_option.as_bool() {
-        Some(cond) => cond.0,
-        None => false
+impl FunctionDeclStatement {
+    fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, Box<dyn Object>> {
+        let mut result_map: HashMap<String, Box<dyn Object>>  = HashMap::new();
+        for hashmap in &state.vars_nodes_map {
+            result_map.extend(hashmap.iter().map(|(k, v)| (k.clone(), v.dyn_clone())));
+        }
+        result_map
     }
 }
