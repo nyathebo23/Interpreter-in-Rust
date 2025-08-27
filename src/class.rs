@@ -119,8 +119,9 @@ impl Expression for InstanceGetSetExpr {
         if obj.get_type() == Type::CLASSINSTANCE {
             let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
             let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
-            println!("gffffff");
+            println!("hggghgg");
             if let Some(value) =  &self.value_to_assign {
+                println!("0000000");
                 let evaluated_value = value.evaluate(state_scope);
                 match &prop {
                     Some(property_val) => {
