@@ -125,13 +125,13 @@ impl Expression for InstanceGetSetExpr {
                 match &prop {
                     Some(property_val) => {
                         if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
-                            class_instance.set(&identifier, evaluated_value);
+                            class_instance.set(&identifier, evaluated_value.dyn_clone());
                             return evaluated_value;
                         }
                     },
                     None => {
                         if evaluated_value.get_type() != Type::FUNCTION {
-                            class_instance.set(&identifier, evaluated_value);
+                            class_instance.set(&identifier, evaluated_value.dyn_clone());
                             return evaluated_value;
                         } 
                     }
