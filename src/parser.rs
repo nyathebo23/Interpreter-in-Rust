@@ -107,7 +107,7 @@ impl Parser<'_> {
 
     fn assignment_expr(&mut self, simple_expr: Box<dyn Expression>) -> Box<dyn Expression> {
         let token = &self.tokens_list[self.current_index - 1];
-        if token.token_type == TokenType::RIGHTBRACE {
+        if token.token_type == TokenType::RIGHTBRACE || self.current_index + 1 == self.size {
             return simple_expr
         }
         if self.current_index + 1 >= self.size {
