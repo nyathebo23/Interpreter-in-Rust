@@ -58,9 +58,9 @@ impl Parser<'_> {
         }
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
-            TokenType::IDENTIFIER => { 
-                return self.identifier_expr(token);
-            },
+            TokenType::IDENTIFIER => Box::new(
+                IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
+            ),
             TokenType::LEFTPAREN => {
                 self.next();
                 let expr = GroupExpr::new(self.expression(), token.line);
@@ -85,7 +85,7 @@ impl Parser<'_> {
             }
         };
         self.next();
-        self.callable_expr(expr)
+        expr
     }
     
     fn non_binary_expr(&mut self) -> Box<dyn Expression> 
@@ -97,18 +97,26 @@ impl Parser<'_> {
         match token.token_type {
             TokenType::MINUS => self.get_unary_expr(token, UnaryOperator::MINUS),
             TokenType::BANG => self.get_unary_expr(token, UnaryOperator::BANG),
-            _ =>  self.simple_expression()
+            _ => {
+                let simple_expr = self.simple_expression();
+                return self.assignment_expr(simple_expr);
+            }
         }
     }
 
 
-    fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
-        let ident_str = token.lexeme.to_string();
+    fn assignment_expr(&mut self, simple_expr: Box<dyn Expression>) -> Box<dyn Expression> {
+        let token = &self.tokens_list[self.current_index - 1];
+        if token.token_type == TokenType::RIGHTBRACE {
+            return simple_expr
+        }
         if self.current_index + 1 >= self.size {
             handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
             process::exit(SYNTAXIC_ERROR_CODE)
         }
-        self.next();
+
+        let ident_str = token.lexeme.to_string();
+
         let mut next_token = &self.tokens_list[self.current_index];
         if next_token.token_type == TokenType::EQUAL {
             self.next();
@@ -116,9 +124,10 @@ impl Parser<'_> {
             return Box::new(IdentifierExpr::new(ident_str, Some(expr), next_token.line));
         }
         else if next_token.token_type != TokenType::DOT {
-            return self.callable_expr(Box::new(IdentifierExpr::new(ident_str, None, next_token.line)));
+            return self.callable_expr(simple_expr);
         }
-        let mut get_set_expr: Box<dyn Expression> = Box::new(IdentifierExpr::new(ident_str, None, next_token.line));
+
+        let mut get_set_expr: Box<dyn Expression> = simple_expr;
         loop {
             self.next();
             let mut get_set_expr_temp = InstanceGetSetExpr::new(get_set_expr, 
@@ -129,8 +138,6 @@ impl Parser<'_> {
                     self.next();
                     let expr = self.expression();
                     get_set_expr_temp.value_to_assign = Some(expr);
-                    println!("zzeeeeeeeeeeee");
-                    //println!("{}", get_set_expr_temp.value_to_assign.unwrap().to_string());
                     return Box::new(get_set_expr_temp);
                 }
                 else {
