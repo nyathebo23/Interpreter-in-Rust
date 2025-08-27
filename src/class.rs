@@ -116,11 +116,10 @@ impl Class {
 impl Expression for InstanceGetSetExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
         let mut obj = self.instance.evaluate(state_scope);
-        println!("{}", obj.to_string());
         if obj.get_type() == Type::CLASSINSTANCE {
             let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
             let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
-
+            println!("gffffff");
             if let Some(value) =  &self.value_to_assign {
                 let evaluated_value = value.evaluate(state_scope);
                 match &prop {
