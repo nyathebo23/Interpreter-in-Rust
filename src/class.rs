@@ -139,9 +139,9 @@ impl Expression for InstanceGetSetExpr {
                 if let None = prop {
                     handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
                     process::exit(RUNTIME_ERROR_CODE);   
-                }             
+                }        
+                return prop.unwrap();
             } 
-            return prop.unwrap();
         }
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
