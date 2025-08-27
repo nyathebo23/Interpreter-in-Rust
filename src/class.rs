@@ -119,19 +119,20 @@ impl Expression for InstanceGetSetExpr {
         if obj.get_type() == Type::CLASSINSTANCE {
             let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
             let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
-            println!("hggghgg");
+            
             if let Some(value) =  &self.value_to_assign {
-                println!("0000000");
                 let evaluated_value = value.evaluate(state_scope);
                 match &prop {
                     Some(property_val) => {
                         if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
                             class_instance.set(&identifier, evaluated_value);
+                            return evaluated_value;
                         }
                     },
                     None => {
                         if evaluated_value.get_type() != Type::FUNCTION {
                             class_instance.set(&identifier, evaluated_value);
+                            return evaluated_value;
                         } 
                     }
                 }
