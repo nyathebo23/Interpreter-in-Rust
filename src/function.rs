@@ -4,8 +4,8 @@ use std::process;
 use std::rc::Rc;
 
 use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
+use crate::interpreter::block_scopes::BlockScopes;
 use crate::interpreter::Interpreter;
-use crate::parser::block_scopes::BlockScopes;
 use crate::parser::declarations::{Number, Object, RefObject, ValueObjTrait, NIL};
 use crate::parser::expressions::{Expression};
 use crate::statements::{Statement};

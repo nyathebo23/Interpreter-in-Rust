@@ -4,8 +4,8 @@ use std::io::{self, Write};
 use std::process;
 
 use crate::error_handler::LEXICAL_ERROR_CODE;
+use crate::interpreter::block_scopes::BlockScopes;
 use crate::interpreter::Interpreter;
-use crate::parser::block_scopes::BlockScopes;
 use crate::parser::Parser;
 use crate::scanner::display_token;
 use crate::scanner::tokenize;
@@ -14,9 +14,9 @@ mod error_handler;
 mod parser;
 mod tokenizer;
 mod statements;
-mod function_manage;
+mod function;
 mod interpreter;
-mod class_manage;
+mod class;
 
 fn main() {
     let args: Vec<String> = env::args().collect();

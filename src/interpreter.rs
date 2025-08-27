@@ -1,8 +1,12 @@
 
-use crate::function_manage::clock_declaration;
-use crate::parser::{block_scopes::BlockScopes, Parser};
+use crate::function::clock_declaration;
+use crate::interpreter::block_scopes::BlockScopes;
+use crate::parser::Parser;
 use crate::statements::controlflow_stmts::statement;
 use crate::statements::Statement;
+pub mod block_scopes;
+pub mod expr_impl;
+mod utils;
 
 pub struct Interpreter<'a> {
     pub parser: Parser<'a>,

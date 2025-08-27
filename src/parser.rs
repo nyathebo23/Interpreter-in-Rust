@@ -1,21 +1,19 @@
 use std::process;
-use std::sync::Arc;
+use std::rc::Rc;
 use crate::error_handler::{handle_error, ErrorType,  SYNTAXIC_ERROR_CODE};
 use crate::parser::declarations::{Bool, Number, Str, NIL};
 use crate::parser::operators_decl::{operators_priority_list, OpChainPriority, UnaryOperator};
 use crate::scanner::declarations::*;
 pub(crate) mod declarations;
 pub mod expressions;
-mod utils;
-mod operators_decl;
-pub mod block_scopes;
+pub mod operators_decl;
 use crate::parser::expressions::*;
 
 pub struct Parser<'a> {
     pub tokens_list: &'a Vec<Token>,
     pub size: usize,
     pub current_index: usize, 
-    op_priority_list: Arc<OpChainPriority>,
+    op_priority_list: Rc<OpChainPriority>,
 }
 
 impl Parser<'_> {
@@ -40,12 +38,7 @@ impl Parser<'_> {
                             self.next();
                             let right_expr0 = self.non_binary_expr();
                             let right_expr = self.get_expr_op_priority(right_expr0, next_map);
-                            left_expr = Box::new(BinaryExpr {
-                                operator: *token_op,
-                                value1: left_expr,
-                                value2: right_expr,
-                                line: current_token.line
-                            });
+                            left_expr = Box::new( BinaryExpr::new(*token_op, left_expr, right_expr, current_token.line));
                             continue 'outer;
                         }
                     }
@@ -59,9 +52,7 @@ impl Parser<'_> {
         }
     }
 
-    
-    fn non_binary_expr(&mut self) -> Box<dyn Expression> 
-    {
+    fn simple_expression(&mut self) -> Box<dyn Expression> {
         if self.current_index >= self.size {
             self.exit_error(&self.tokens_list[self.current_index].line, "Error: Expect expression.");
         }
@@ -72,29 +63,21 @@ impl Parser<'_> {
             },
             TokenType::LEFTPAREN => {
                 self.next();
-                let expr = GroupExpr {
-                    value: self.expression(),
-                };
+                let expr = GroupExpr::new(self.expression());
                 self.check_token_valid(TokenType::RIGHTPAREN, ")");
                 Box::new(expr)
             },
             TokenType::STRING => {
                 let token_str = token.literal.clone().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Str(token_str)) })
+                Box::new( LiteralExpr::new(Box::new(Str(token_str))) )
             },
             TokenType::NUMBER => {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-                Box::new(LiteralExpr { value: Box::new(Number(number)) })
+                Box::new( LiteralExpr::new(Box::new(Number(number))) )
             },
-            TokenType::NIL => Box::new(LiteralExpr { value: Box::new(NIL) }),
-            TokenType::TRUE => Box::new(LiteralExpr { value: Box::new(Bool(true)) }),
-            TokenType::FALSE => Box::new(LiteralExpr { value: Box::new(Bool(false)) }), 
-            TokenType::MINUS => {
-                return self.get_unary_expr(token, UnaryOperator::MINUS);
-            },
-            TokenType::BANG => {
-                return self.get_unary_expr(token, UnaryOperator::BANG);
-            }
+            TokenType::NIL => Box::new( LiteralExpr::new(Box::new(NIL)) ),
+            TokenType::TRUE => Box::new( LiteralExpr::new(Box::new(Bool(true))) ),
+            TokenType::FALSE => Box::new( LiteralExpr::new(Box::new(Bool(false))) ),
             _ => {
                 handle_error(&token.line, ErrorType::SyntacticError, 
                     format!("Error at {0}: Expect expression.", token.lexeme).as_str());
@@ -102,7 +85,92 @@ impl Parser<'_> {
             }
         };
         self.next();
-        self.func_call_params(expr)
+        self.callable_expr(expr)
+    }
+    
+    fn non_binary_expr(&mut self) -> Box<dyn Expression> 
+    {
+        if self.current_index >= self.size {
+            self.exit_error(&self.tokens_list[self.current_index].line, "Error: Expect expression.");
+        }
+        let token = &self.tokens_list[self.current_index];
+        match token.token_type {
+            TokenType::MINUS => self.get_unary_expr(token, UnaryOperator::MINUS),
+            TokenType::BANG => self.get_unary_expr(token, UnaryOperator::BANG),
+            _ =>  self.simple_expression()
+        }
+    }
+
+
+    fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
+        let ident_str = token.lexeme.to_string();
+        if self.current_index + 1 >= self.size {
+            handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
+            process::exit(SYNTAXIC_ERROR_CODE)
+        }
+        self.next();
+        let mut next_token = &self.tokens_list[self.current_index];
+        if next_token.token_type == TokenType::EQUAL {
+            self.next();
+            let expr = self.expression();
+            return Box::new(IdentifierExpr::new(ident_str, Some(expr), next_token.line));
+        }
+        else if next_token.token_type != TokenType::DOT {
+            return self.callable_expr(Box::new(IdentifierExpr::new(ident_str, None, next_token.line)));
+        }
+        let mut get_set_expr: Box<dyn Expression> = Box::new(IdentifierExpr::new(ident_str, None, next_token.line));
+        loop {
+            self.next();
+            let mut get_set_expr_temp = InstanceGetSetExpr::new(get_set_expr, 
+                self.simple_expression(), None, next_token.line);
+            next_token = &self.tokens_list[self.current_index];
+            if next_token.token_type != TokenType::DOT {
+                if next_token.token_type == TokenType::EQUAL {
+                    self.next();
+                    let expr = self.expression();
+                    get_set_expr_temp.value_to_assign = Some(expr);
+                    return Box::new(get_set_expr_temp);
+                }
+                else {
+                    return self.callable_expr(Box::new(get_set_expr_temp)); 
+                }
+            }
+            get_set_expr = Box::new(get_set_expr_temp);
+        }
+        
+        
+    }
+
+    fn callable_expr(&mut self, prev_func_expr: Box<dyn Expression>) -> Box<dyn Expression> {
+        if self.current_index > self.size - 2 || self.size == 1 {
+            return prev_func_expr;
+        }
+        let token = self.current_token();
+        let line = token.line;
+        if token.token_type == TokenType::LEFTPAREN {
+            let mut params: Vec<Box<dyn Expression>> = Vec::new();
+            self.next();
+            if self.current_token().token_type != TokenType::RIGHTPAREN {
+                loop {
+                    params.push(self.expression());
+                    if self.current_token().token_type != TokenType::COMMA {
+                        break;
+                    } 
+                    self.next();
+                }
+            }
+            self.check_token(TokenType::RIGHTPAREN, ")");
+               
+            let callable = CallExpr::new(prev_func_expr, params, line);
+            return self.callable_expr(Box::new(callable));
+        }
+        else if token.token_type == TokenType::DOT {
+            self.next();
+            let get_set_expr = InstanceGetSetExpr::new(prev_func_expr, 
+                self.simple_expression(), None, line);
+            return self.callable_expr(Box::new(get_set_expr));
+        }
+        prev_func_expr
     }
 
     fn exit_error(&self, line: &u32, text: &str) {
@@ -116,65 +184,7 @@ impl Parser<'_> {
                 format!("Error: Expected character {}", lexeme).as_str());
         }
     }
-
-    fn identifier_expr(&mut self, token: &Token) -> Box<dyn Expression> {
-        let ident_str = token.lexeme.to_string();
-        if self.current_index + 1 >= self.size {
-            handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
-            process::exit(SYNTAXIC_ERROR_CODE)
-        }
-        self.next();
-        let next_token = &self.tokens_list[self.current_index];
-        if next_token.token_type == TokenType::EQUAL {
-            self.next();
-            let expr = self.expression();
-            return Box::new(
-                IdentifierExpr {
-                    ident_name: ident_str,
-                    value_to_assign: Some(expr),
-                    line: self.current_token().line
-                }
-            );
-        }
-        self.func_call_params(Box::new(
-            IdentifierExpr {
-                ident_name: ident_str,
-                value_to_assign: None,
-                line: token.line
-            }
-        ))
-    }
-
-    fn func_call_params(&mut self, func_obj_expr: Box<dyn Expression>) -> Box<dyn Expression> {
-        if self.current_index > self.size - 2 || self.size == 1 {
-            return func_obj_expr;
-        }
-        let current_token = self.current_token();
-        let line = current_token.line;
-        if current_token.token_type == TokenType::LEFTPAREN {
-            let mut params: Vec<Box<dyn Expression>> = Vec::new();
-            self.next();
-            if self.current_token().token_type != TokenType::RIGHTPAREN {
-                loop {
-                    params.push(self.expression());
-                    if self.current_token().token_type != TokenType::COMMA {
-                        break;
-                    } 
-                    self.next();
-                }
-            }
-            self.check_token(TokenType::RIGHTPAREN, ")");
-            let func_expr = Box::new(
-                CallExpr {
-                    func: func_obj_expr,
-                    params,
-                    line: line
-            });
-            return self.func_call_params(func_expr);
-        }
-        func_obj_expr
-    }
-
+    
     pub fn next(&mut self) {
         self.current_index += 1;
     }
@@ -182,11 +192,7 @@ impl Parser<'_> {
     fn get_unary_expr(&mut self, token: &Token, op: UnaryOperator) -> Box<dyn Expression> {
         self.next();
         let child_expr = self.non_binary_expr();      
-        let expr = UnaryExpr {
-            operator: op,
-            value: child_expr,
-            line: token.line
-        };
+        let expr = UnaryExpr::new(op, child_expr, token.line);
         Box::new(expr)
     }
 

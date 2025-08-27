@@ -3,7 +3,7 @@ use std::process;
 use std::rc::Rc;
 
 use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
-use crate::function_manage::Function;
+use crate::function::Function;
 use crate::interpreter::{Interpreter};
 use crate::parser::declarations::{NIL};
 use crate::parser::expressions::{Expression, LiteralExpr};

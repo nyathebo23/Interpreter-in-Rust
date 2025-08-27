@@ -1,9 +1,6 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-
-use crate::{class_manage::Class, function_manage::Function, parser::declarations::{Object, RefObject}};
-
-
-
+use crate::{class::Class, function::Function};
+use crate::parser::declarations::{Object, RefObject};
 
 pub struct BlockScopes {
     pub vars_nodes_map: Vec<HashMap<String, RefObject>>,

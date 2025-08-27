@@ -394,3 +394,168 @@
 //         }
 //     }
 // }
+
+// use crate::parser::expressions::{CallExpr, GetSetExpr, IdentifierExpr};
+
+//     pub struct GetSetExpr {
+//     pub instance: Box<dyn Expression>,
+//     pub prop_identifier: String,
+//     pub prop_method_params: Option<Vec<Box<dyn Expression>>>,
+//     pub value_to_assign: Option<Box<dyn Expression>>,
+//     pub line: u32
+// }
+
+// impl GetSetExpr {
+//     pub fn new(instance: Box<dyn Expression>, prop_identifier: String, prop_method_params: Option<Vec<Box<dyn Expression>>>,
+//         value_to_assign: Option<Box<dyn Expression>>, line: u32) -> GetSetExpr {
+//             GetSetExpr { 
+//                 instance, 
+//                 prop_identifier, 
+//                 prop_method_params, 
+//                 value_to_assign, 
+//                 line 
+//             }
+//         }
+// }
+
+    
+// fn identifier_expr(&mut self, prec_get_set_expr: Option<Box<dyn Expression>>, token: &Token) -> Box<dyn Expression> {
+//         let ident_str = token.lexeme.to_string();
+//         if self.current_index + 1 >= self.size {
+//             handle_error(&token.line, ErrorType::SyntacticError, "Unexpected end of file");
+//             process::exit(SYNTAXIC_ERROR_CODE)
+//         }
+//         self.next();
+//         let next_token = &self.tokens_list[self.current_index];
+//         if next_token.token_type == TokenType::EQUAL {
+//             self.next();
+//             let expr = self.expression();
+//             let result_expr: Box<dyn Expression> =  match prec_get_set_expr {
+//                 Some(prec_expr) => Box::new(
+//                     GetSetExpr::new(prec_expr, ident_str, None, 
+//                         Some(expr), next_token.line)
+//                 ),
+//                 None => Box::new(
+//                     IdentifierExpr::new(ident_str, Some(expr), next_token.line)
+//                 )
+//             };
+//             return result_expr;
+//         }
+//         else if next_token.token_type == TokenType::DOT {
+//             let result_expr: Box<dyn Expression> = match prec_get_set_expr {
+//                 Some(prec_expr) => Box::new(
+//                     GetSetExpr::new(prec_expr, ident_str, None, 
+//                         None, next_token.line)
+//                 ),
+//                 None => Box::new(
+//                     IdentifierExpr::new(ident_str, None, next_token.line)
+//                 )
+//             };
+//             self.next();
+//             let next_token = &self.tokens_list[self.current_index];
+//             return self.identifier_expr(Some(result_expr), next_token);
+//         }
+//         self.callable_expr(prec_get_set_expr, Some(ident_str), next_token)
+//     }
+
+//     fn callable_expr(&mut self, prec_get_set_expr: Option<Box<dyn Expression>>, 
+//         prev_callable: Box<dyn Expression>, token: &Token) -> Box<dyn Expression> {
+//         if self.current_index > self.size - 2 || self.size == 1 {
+//             return prev_callable;
+//         }
+//         let line = token.line;
+//         if token.token_type == TokenType::LEFTPAREN {
+//             let mut params: Vec<Box<dyn Expression>> = Vec::new();
+//             self.next();
+//             if self.current_token().token_type != TokenType::RIGHTPAREN {
+//                 loop {
+//                     params.push(self.expression());
+//                     if self.current_token().token_type != TokenType::COMMA {
+//                         break;
+//                     } 
+//                     self.next();
+//                 }
+//             }
+//             self.check_token(TokenType::RIGHTPAREN, ")");
+               
+//             let callable = CallExpr::new(prev_callable, params, line);
+//             let next_token = self.current_token();
+//             return self.callable_expr(prec_get_set_expr, Box::new(callable), next_token);
+//         }
+//         else if token.token_type == TokenType::DOT {
+//             self.next();
+//             let token = self.current_token();
+//             let ident_str = token.lexeme.to_string();
+//             let ident_expr = Box::new(
+//                 IdentifierExpr {
+//                     ident_name: ident_str,
+//                     value_to_assign: None,
+//                     line: token.line
+//                 }
+//             );
+//             let prec_expr = match prec_get_set_expr {
+//                 Some(expr) => {
+//                     Box::new(
+//                         GetSetExpr::new(prec_expr, ident_str, None, 
+//                         None, token.line)
+//                     )
+//                 },
+//                 None => func_obj_expr
+//             };
+            
+//             return self.callable_expr(Some(prec_expr), ident_expr);
+//         }
+//         match prec_get_set_expr {
+//             Some(expr) => Box::new(
+//                 GetSetExpr::new(prec_expr, ident_str, None, 
+//                 None, token.line)
+//             ),
+//             None => func_obj_expr
+//         }
+//     }
+
+// impl Expression for GetSetExpr  {
+
+//     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
+//         let mut instance_class = self.instance.evaluate(state_scope);
+//         if instance_class.get_type() != Type::CLASSINSTANCE {
+//             process::exit(RUNTIME_ERROR_CODE);
+//         }
+//         let instance = instance_class.as_class_instance().unwrap();
+
+//         match &self.value_to_assign {
+//             Some(value) => {
+//                 let obj_value = value.evaluate(state_scope);
+//                 instance.set(&self.prop_identifier, obj_value.dyn_clone());
+//                 obj_value
+//             },
+//             None => {
+//                 match &self.prop_method_params {
+//                     Some(params) => {
+//                         let callable_val = instance.get(&self.prop_identifier);
+//                         if callable_val.get_type() == Type::FUNCTION {
+//                             let func = callable_val.as_function().unwrap();
+//                             func.call(&params, state_scope, &self.line)
+//                         }
+//                         else {
+//                             handle_error(&self.line, ErrorType::RuntimeError, 
+//                                 "Can only call functions and classes.");
+//                             process::exit(RUNTIME_ERROR_CODE); 
+//                         }
+//                     },
+//                     None => {
+//                         instance.get(&self.prop_identifier)
+//                     }
+//                 }
+//             }
+//         }
+//     }   
+
+//     fn contains_identifier(&self, ident: &String) -> bool {
+//         self.instance.contains_identifier(ident)
+//     }
+
+//     fn to_string(&self) -> String {
+//         self.instance.to_string()
+//     }
+// }

@@ -1,6 +1,6 @@
 
 use std::{borrow::Cow, cell::RefCell, ops::{Add, Div, Mul, Sub}, rc::Rc};
-use crate::{class_manage::{Class, ClassInstance}, function_manage::Function, scanner::utils::literal_number};
+use crate::{class::{Class, ClassInstance}, function::Function, scanner::utils::literal_number};
 
 
 #[derive(PartialEq)]
@@ -41,7 +41,7 @@ pub trait ValueObjTrait {
         None
     }
     
-    fn as_class_instance(&self) -> Option<&ClassInstance> {
+    fn as_class_instance(&mut self) -> Option<&mut ClassInstance> {
         None
     }
 }

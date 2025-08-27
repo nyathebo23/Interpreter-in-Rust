@@ -2,10 +2,11 @@
 
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
-use crate::class_manage::Class;
+use crate::class::Class;
+use crate::interpreter::block_scopes::BlockScopes;
 use crate::parser::declarations::RefObject;
-use crate::function_manage::Function;
-use crate::parser::{block_scopes::BlockScopes, declarations::Object, expressions::Expression};
+use crate::function::Function;
+use crate::parser::{declarations::Object, expressions::Expression};
 mod simple_statement;
 pub mod classes_decl_stmt;
 pub mod controlflow_stmts;
@@ -186,7 +187,8 @@ impl FunctionDeclStatement {
 
 
 pub struct ClassDeclStatement {
-    class: Class
+    class: Class,
+    methods: Vec<Function>
 }
 
 impl Statement for ClassDeclStatement {
