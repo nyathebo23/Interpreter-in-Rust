@@ -1,6 +1,7 @@
 use crate::class::Class;
 use crate::interpreter::Interpreter;
 use crate::scanner::declarations::TokenType;
+use crate::statements::function_stmt::func_decl;
 use crate::statements::ClassDeclStatement;
 
 
@@ -12,19 +13,18 @@ pub fn class_decl_statement(interpreter: &mut Interpreter) -> ClassDeclStatement
 
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
 
-
-    // while interpreter.parser.current_token().token_type != TokenType::RIGHTBRACE {
-    //     func_decl_statement(interpreter);
-    // }
+    let mut methods = Vec::new();
+    while interpreter.parser.current_token().token_type != TokenType::RIGHTBRACE {
+        methods.push(func_decl(interpreter));
+    }
     
-
     interpreter.parser.check_token(TokenType::RIGHTBRACE, "}");
 
     let class_obj = Class {
-        name: class_name
+        name: class_name,
+        methods
     };
     ClassDeclStatement {
-        class: class_obj,
-        methods: Vec::new()
+        class: class_obj
     }
 }

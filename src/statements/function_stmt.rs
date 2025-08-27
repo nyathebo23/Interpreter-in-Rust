@@ -66,8 +66,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
     process::exit(SYNTAXIC_ERROR_CODE);  
 }
 
-
-pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
+pub fn func_decl(interpreter: &mut Interpreter) -> Function {
     interpreter.parser.next();
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
@@ -96,14 +95,17 @@ pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStateme
     
     let statements = block_func_statement(interpreter, &params);
     
-    let function = Function {
+    Function {
         name: ident_str.into(),
         params_names: params.into(),
         statements: Rc::new(statements),
         extra_map: HashMap::new()
-    };
+    }
+}
+
+pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
     FunctionDeclStatement {
-        function_decl: function,
+        function_decl: func_decl(interpreter),
     }
 }
 

@@ -1,6 +1,7 @@
 use std::{borrow::Cow, cell::RefCell, collections::HashMap, process, rc::Rc};
 
 use crate::error_handler::{handle_error, ErrorType};
+use crate::function::Function;
 use crate::interpreter::block_scopes::BlockScopes;
 use crate::{error_handler::RUNTIME_ERROR_CODE};
 use crate::parser::expressions::{Expression, InstanceGetSetExpr};
@@ -10,6 +11,7 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
+    pub methods: Vec<Function>
 }
 
 
@@ -31,7 +33,8 @@ impl Object for Class  {
 
     fn dyn_clone(&self) -> Box<dyn Object> {
         Box::new(Class{
-            name: self.name.clone()
+            name: self.name.clone(),
+            methods: self.methods.clone()
         })
     }
 }
@@ -104,9 +107,15 @@ impl ToString for ClassInstance {
 
 impl Class {
     pub fn call(&self, _params: &Vec<Box<dyn Expression>>, _out_func_state: &mut BlockScopes, _line: &u32) -> ClassInstance {
+        let mut attrs = HashMap::new();
+        for func in self.methods.iter() {
+            let name = func.name.to_string();
+            let func_obj: Box<dyn Object> = Box::new(func.clone());
+            attrs.insert(name, Rc::new(RefCell::new(func_obj)));
+        }
         let instance = ClassInstance {
             class: Rc::new(self.clone()),
-            attributes: Rc::new(RefCell::new(HashMap::new())),
+            attributes: Rc::new(RefCell::new(attrs)) 
         };
         instance
     }
