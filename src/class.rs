@@ -135,9 +135,11 @@ impl Expression for InstanceGetSetExpr {
                     }
                 }
             }
-            else if let None = prop {
-                handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
-                process::exit(RUNTIME_ERROR_CODE);                
+            else {
+                if let None = prop {
+                    handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
+                    process::exit(RUNTIME_ERROR_CODE);   
+                }             
             } 
             return prop.unwrap();
         }
