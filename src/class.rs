@@ -64,7 +64,7 @@ impl ClassInstance {
 
     pub fn set(&mut self, field: &String, object: Box<dyn Object>) {
         let mut attributes_mut = self.attributes.borrow_mut();
-        if let Some(val) = self.attributes.borrow_mut().get(field) {
+        if let Some(val) = attributes_mut.get(field) {
             let mut val_mut = val.borrow_mut();
             *val_mut = object;
         }
