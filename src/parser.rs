@@ -189,7 +189,7 @@ impl Parser<'_> {
 
     fn check_token_valid(&self, tokentype: TokenType, lexeme: &str) {
         if self.current_index >= self.size || (&self.tokens_list[self.current_index]).token_type != tokentype  {
-            self.exit_error(&self.tokens_list[self.current_index].line, 
+            self.exit_error(&self.tokens_list[self.current_index-1].line, 
                 format!("Error: Expected character {}", lexeme).as_str());
         }
     }
