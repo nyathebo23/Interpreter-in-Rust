@@ -94,6 +94,8 @@ impl Expression for LiteralExpr {
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+        handle_error(&self.line, ErrorType::RuntimeError, 
+            "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
     }
 
@@ -112,6 +114,8 @@ impl Expression for GroupExpr {
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+        handle_error(&self.line, ErrorType::RuntimeError, 
+            "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
     }
 
@@ -156,6 +160,8 @@ impl  Expression for UnaryExpr {
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+        handle_error(&self.line, ErrorType::RuntimeError, 
+            "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
     }
 
@@ -235,6 +241,8 @@ impl  Expression for BinaryExpr {
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+        handle_error(&self.line, ErrorType::RuntimeError, 
+            "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
     }
 

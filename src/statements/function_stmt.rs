@@ -15,8 +15,9 @@ use crate::statements::{FunctionDeclStatement, ReturnStatement, Statement};
 
 pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
     interpreter.parser.next();
-    if interpreter.parser.current_token().token_type == TokenType::SEMICOLON {
-        let nil_expr: Box<dyn Expression> = Box::new(LiteralExpr{value: Box::new(NIL)});
+    let token = interpreter.parser.current_token();
+    if token.token_type == TokenType::SEMICOLON {
+        let nil_expr: Box<dyn Expression> = Box::new(LiteralExpr::new(Box::new(NIL), token.line) );
         interpreter.parser.next();
         return ReturnStatement::new(nil_expr);
     }

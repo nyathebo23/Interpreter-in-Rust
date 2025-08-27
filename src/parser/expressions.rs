@@ -99,21 +99,23 @@ impl UnaryExpr {
 }
 pub struct LiteralExpr {
     pub value: Box<dyn Object>,
+    pub line: u32
 }
 
 impl LiteralExpr {
-    pub fn new(value: Box<dyn Object>) -> LiteralExpr {
-        LiteralExpr { value }
+    pub fn new(value: Box<dyn Object>, line: u32) -> LiteralExpr {
+        LiteralExpr { value, line }
     }
 }
 
 pub struct GroupExpr  {
     pub value: Box<dyn Expression>,
+    pub line: u32
 }
 
 impl GroupExpr {
-    pub fn new(value: Box<dyn Expression>) -> GroupExpr {
-        GroupExpr { value }
+    pub fn new(value: Box<dyn Expression>, line: u32) -> GroupExpr {
+        GroupExpr { value, line }
     }
 }
 

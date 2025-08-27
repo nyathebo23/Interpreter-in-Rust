@@ -185,7 +185,6 @@ impl FunctionDeclStatement {
     }
 }
 
-
 pub struct ClassDeclStatement {
     class: Class,
     methods: Vec<Function>

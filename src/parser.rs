@@ -63,21 +63,21 @@ impl Parser<'_> {
             },
             TokenType::LEFTPAREN => {
                 self.next();
-                let expr = GroupExpr::new(self.expression());
+                let expr = GroupExpr::new(self.expression(), token.line);
                 self.check_token_valid(TokenType::RIGHTPAREN, ")");
                 Box::new(expr)
             },
             TokenType::STRING => {
                 let token_str = token.literal.clone().unwrap();
-                Box::new( LiteralExpr::new(Box::new(Str(token_str))) )
+                Box::new( LiteralExpr::new(Box::new(Str(token_str)), token.line) )
             },
             TokenType::NUMBER => {
                 let number = token.literal.clone().unwrap().parse::<f64>().unwrap();
-                Box::new( LiteralExpr::new(Box::new(Number(number))) )
+                Box::new( LiteralExpr::new(Box::new(Number(number)), token.line) )
             },
-            TokenType::NIL => Box::new( LiteralExpr::new(Box::new(NIL)) ),
-            TokenType::TRUE => Box::new( LiteralExpr::new(Box::new(Bool(true))) ),
-            TokenType::FALSE => Box::new( LiteralExpr::new(Box::new(Bool(false))) ),
+            TokenType::NIL => Box::new( LiteralExpr::new(Box::new(NIL), token.line) ),
+            TokenType::TRUE => Box::new( LiteralExpr::new(Box::new(Bool(true)), token.line) ),
+            TokenType::FALSE => Box::new( LiteralExpr::new(Box::new(Bool(false)), token.line) ),
             _ => {
                 handle_error(&token.line, ErrorType::SyntacticError, 
                     format!("Error at {0}: Expect expression.", token.lexeme).as_str());

@@ -204,7 +204,7 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool) -> Vec<Box
     stmts.push(Box::new(StartBlockStatement{}));
     interpreter.parser.check_token(TokenType::LEFTPAREN, "(");
     let token = interpreter.parser.current_token();
-
+    let line = token.line;
     if token.token_type == TokenType::VAR {
         stmts.push(Box::new(var_statement(interpreter)));
     }
@@ -214,7 +214,7 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool) -> Vec<Box
     else {
         interpreter.parser.check_token(TokenType::SEMICOLON, ";");
     }
-    let mut condition: Box<dyn Expression> = Box::new(LiteralExpr{ value: Box::new(Bool(true)) }); 
+    let mut condition: Box<dyn Expression> = Box::new(LiteralExpr::new(Box::new(Bool(true)), line)); 
     if interpreter.parser.current_token().token_type != TokenType::SEMICOLON {
         condition = interpreter.parser.expression();
     }

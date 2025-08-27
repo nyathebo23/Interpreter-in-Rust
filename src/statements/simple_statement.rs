@@ -20,6 +20,7 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
     let identifier_str = identifier.lexeme.to_string();
     interpreter.parser.check_token(TokenType::IDENTIFIER, "identifier");
     let token = interpreter.parser.current_token();
+    let line = token.line;
     if token.token_type == TokenType::EQUAL {
         interpreter.parser.next();
         let expr = interpreter.parser.expression();
@@ -33,7 +34,7 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
         interpreter.parser.check_token(TokenType::SEMICOLON, ";"); 
         return VarStatement {
             name: identifier_str,
-            expression: Box::new(LiteralExpr { value:Box::new(NIL) })
+            expression: Box::new(LiteralExpr::new(Box::new(NIL), line))
         };
     }
 }
