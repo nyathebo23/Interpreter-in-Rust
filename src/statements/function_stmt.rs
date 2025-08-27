@@ -71,6 +71,7 @@ pub fn func_decl(interpreter: &mut Interpreter) -> Function {
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut params: Vec<String> = Vec::new();
+    println!("{}", interpreter.parser.current_token().lexeme);
     interpreter.parser.check_token(TokenType::LEFTPAREN, "(");
     let mut current_token = interpreter.parser.current_token();
     let line = current_token.line;
