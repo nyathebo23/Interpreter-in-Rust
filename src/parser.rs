@@ -138,6 +138,7 @@ impl Parser<'_> {
                     self.next();
                     let expr = self.expression();
                     get_set_expr_temp.value_to_assign = Some(expr);
+                    println!("fghhhhh");
                     return Box::new(get_set_expr_temp);
                 }
                 else {
