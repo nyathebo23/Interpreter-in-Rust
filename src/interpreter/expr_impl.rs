@@ -32,6 +32,7 @@ impl Expression for CallExpr  {
     fn value_from_class_instance(&self, instance: &ClassInstance, state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
         let (identifier, func) = self.callable.value_from_class_instance(instance, state_scope);
         if func.get_type() != Type::FUNCTION {
+            handle_error(&self.line, ErrorType::RuntimeError, "Expect function");
             process::exit(RUNTIME_ERROR_CODE)
         }
         (identifier, (func.as_function().unwrap()).call(&self.params, state_scope, &self.line))
@@ -72,7 +73,13 @@ impl Expression for IdentifierExpr {
     }
 
     fn value_from_class_instance(&self, instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
-        (self.ident_name.clone(), instance.get(&self.ident_name))  
+        let (identifier, property_value) = (self.ident_name.clone(), instance.get(&self.ident_name));
+        if let Some(value) = property_value {
+            return (identifier.clone(), value);
+        }
+        handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
+        process::exit(RUNTIME_ERROR_CODE)
+
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {

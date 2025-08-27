@@ -55,11 +55,11 @@ impl Object for ClassInstance {
 }
 
 impl ClassInstance {
-    pub fn get(&self, field: &String) -> Box<dyn Object> {
+    pub fn get(&self, field: &String) -> Option<Box<dyn Object>> {
         if let Some(val) = self.attributes.borrow().get(field) {
-            return val.borrow().dyn_clone();
+            return Some(val.borrow().dyn_clone());
         }
-        process::exit(RUNTIME_ERROR_CODE)
+        None
     }
 
     pub fn set(&mut self, field: &String, object: Box<dyn Object>) {
