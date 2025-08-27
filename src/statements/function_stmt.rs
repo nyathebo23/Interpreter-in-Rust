@@ -67,11 +67,9 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
 }
 
 pub fn func_decl(interpreter: &mut Interpreter) -> Function {
-    interpreter.parser.next();
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut params: Vec<String> = Vec::new();
-    println!("{}", interpreter.parser.current_token().lexeme);
     interpreter.parser.check_token(TokenType::LEFTPAREN, "(");
     let mut current_token = interpreter.parser.current_token();
     let line = current_token.line;
@@ -105,6 +103,7 @@ pub fn func_decl(interpreter: &mut Interpreter) -> Function {
 }
 
 pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
+    interpreter.parser.next();
     FunctionDeclStatement {
         function_decl: func_decl(interpreter),
     }
