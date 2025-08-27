@@ -119,14 +119,27 @@ impl Expression for InstanceGetSetExpr {
         if obj.get_type() == Type::CLASSINSTANCE {
             let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
             let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
+
             if let Some(value) =  &self.value_to_assign {
                 let evaluated_value = value.evaluate(state_scope);
-                if prop.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
-                    class_instance.set(&identifier, evaluated_value);
+                match &prop {
+                    Some(property_val) => {
+                        if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
+                            class_instance.set(&identifier, evaluated_value);
+                        }
+                    },
+                    None => {
+                        if evaluated_value.get_type() != Type::FUNCTION {
+                            class_instance.set(&identifier, evaluated_value);
+                        } 
+                    }
                 }
-                process::exit(RUNTIME_ERROR_CODE);
             }
-            return prop;
+            if let None = prop {
+                handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
+                process::exit(RUNTIME_ERROR_CODE);                
+            } 
+            return prop.unwrap();
         }
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
@@ -140,7 +153,7 @@ impl Expression for InstanceGetSetExpr {
         }
     }
 
-    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         process::exit(RUNTIME_ERROR_CODE)
     }
 

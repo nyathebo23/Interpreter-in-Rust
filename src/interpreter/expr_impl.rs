@@ -29,13 +29,17 @@ impl Expression for CallExpr  {
         
     }
 
-    fn value_from_class_instance(&self, instance: &ClassInstance, state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
-        let (identifier, func) = self.callable.value_from_class_instance(instance, state_scope);
-        if func.get_type() != Type::FUNCTION {
-            handle_error(&self.line, ErrorType::RuntimeError, "Expect function");
-            process::exit(RUNTIME_ERROR_CODE)
+    fn value_from_class_instance(&self, instance: &ClassInstance, state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
+        let (identifier, func_option) = self.callable.value_from_class_instance(instance, state_scope);
+        if let Some(func) = func_option {
+            if func.get_type() != Type::FUNCTION {
+                handle_error(&self.line, ErrorType::RuntimeError, "Expect function");
+                process::exit(RUNTIME_ERROR_CODE)
+            }
+            return (identifier, Some((func.as_function().unwrap()).call(&self.params, state_scope, &self.line)));
         }
-        (identifier, (func.as_function().unwrap()).call(&self.params, state_scope, &self.line))
+        handle_error(&self.line, ErrorType::RuntimeError, format!("No Callable with name '{}'", identifier).as_str());
+        process::exit(RUNTIME_ERROR_CODE)
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {
@@ -72,14 +76,8 @@ impl Expression for IdentifierExpr {
         process::exit(RUNTIME_ERROR_CODE);
     }
 
-    fn value_from_class_instance(&self, instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
-        let (identifier, property_value) = (self.ident_name.clone(), instance.get(&self.ident_name));
-        if let Some(value) = property_value {
-            return (identifier.clone(), value);
-        }
-        handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
-        process::exit(RUNTIME_ERROR_CODE)
-
+    fn value_from_class_instance(&self, instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
+        (self.ident_name.clone(), instance.get(&self.ident_name))
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {
@@ -100,7 +98,7 @@ impl Expression for LiteralExpr {
         false
     }
 
-    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
@@ -120,7 +118,7 @@ impl Expression for GroupExpr {
         self.value.contains_identifier(ident)
     }
 
-    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
@@ -166,7 +164,7 @@ impl  Expression for UnaryExpr {
         self.value.contains_identifier(ident)
     }
 
-    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
@@ -247,7 +245,7 @@ impl  Expression for BinaryExpr {
         }
     }
 
-    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Box<dyn Object>) {
+    fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
