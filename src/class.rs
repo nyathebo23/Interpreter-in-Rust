@@ -163,10 +163,9 @@ impl Expression for InstanceGetSetExpr {
                 handle_error(&self.line, ErrorType::RuntimeError, 
                     format!("Undefined property '{}'", identifier).as_str());
                 process::exit(RUNTIME_ERROR_CODE);   
-            }        
+            }
             return prop.unwrap();
         } 
-        
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {
