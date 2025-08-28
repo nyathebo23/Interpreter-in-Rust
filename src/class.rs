@@ -119,8 +119,6 @@ impl Class {
             init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             init.call(params, out_func_state, line);
         }
-        let ident = String::from("x");
-        println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
 
         let mut attrs = HashMap::new();
         for func in self.methods.iter() {
@@ -153,7 +151,6 @@ impl Expression for InstanceGetSetExpr {
         if let Some(value) =  &self.value_to_assign {
             let evaluated_value = value.evaluate(state_scope);
             class_instance.set(&identifier, evaluated_value.dyn_clone());
-            //println!("{} {} {}", class_instance.clone().to_string(), identifier.clone(), class_instance.clone().get(&identifier.clone()).unwrap().to_string());
             return evaluated_value;
         }
         else {
