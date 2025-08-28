@@ -113,13 +113,14 @@ impl Class {
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let mut classes_tree_list = Vec::new();
-        let mut constructor = &self.constructor;
-
-        while let Some(super_class) = &self.super_class {
-            classes_tree_list.push(super_class.clone());
-            if let None = constructor {
-                constructor = &super_class.constructor;
+        let mut constructor = self.constructor.clone();
+        let mut class_item = Box::new(self.clone()); 
+        loop {
+            let result = Class::get_super_class(&class_item, &mut constructor, &mut classes_tree_list);
+            if let None = result {
+                break;
             }
+            class_item = result.unwrap();
         }
 
         let this = String::from("this");
@@ -136,6 +137,18 @@ impl Class {
         }
         self.set_methods_on_instance(&mut instance, &Box::new(self.clone()));
         instance
+    }
+
+    fn get_super_class(class: &Box<Class>, construct: &mut Option<Function>, 
+        classes_tree_list: &mut Vec<Box<Class>>) -> Option<Box<Class>> {
+        if let Some(super_class) = &class.super_class {
+            classes_tree_list.push(super_class.clone());
+            if let None = construct {
+                *construct = super_class.constructor.clone();
+            }
+            return Some(super_class.clone());
+        }
+        None
     }
 
     fn set_methods_on_instance(&self, instance: &mut ClassInstance, class: &Box<Class>) {
