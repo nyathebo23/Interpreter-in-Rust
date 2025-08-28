@@ -65,6 +65,7 @@ impl Expression for IdentifierExpr {
                 "Error at 'this': Can't use 'this' outside of a class.");
                 process::exit(SYNTAXIC_ERROR_CODE);
             }
+            println!("azertyui")
         }
         let current_value = state_scope.get_variable(&self.ident_name);
         if let Some(value) = current_value {
