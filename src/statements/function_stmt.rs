@@ -60,7 +60,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
                 return stmts;
             },
             TokenType::FUN => {
-                stmts.push(Box::new(func_decl_statement(interpreter)));
+                stmts.push(Box::new(func_decl_statement(interpreter, is_in_class_func)));
             },
             _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, is_init_method, is_in_class_func))
         } 
@@ -109,10 +109,10 @@ pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_clas
     }
 }
 
-pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
+pub fn func_decl_statement(interpreter: &mut Interpreter, is_in_class_func: bool) -> FunctionDeclStatement {
     interpreter.parser.next();
     FunctionDeclStatement {
-        function_decl: func_decl(interpreter, false, false),
+        function_decl: func_decl(interpreter, false, is_in_class_func),
     }
 }
 

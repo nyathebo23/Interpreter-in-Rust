@@ -40,7 +40,7 @@ pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_meth
                 return stmts;
             },
             TokenType::FUN => {
-                stmts.push(Box::new(func_decl_statement(interpreter)));
+                stmts.push(Box::new(func_decl_statement(interpreter, is_in_class_func)));
             },
             _ => stmts.append(&mut block_statements(interpreter, token.token_type, is_in_func, is_init_method, is_in_class_func))
         } 
@@ -57,7 +57,7 @@ pub fn statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
     let token = interpreter.parser.current_token();
     match token.token_type {
         TokenType::FUN => {
-            let fun_stmt: Box<dyn Statement> = Box::new(func_decl_statement(interpreter));
+            let fun_stmt: Box<dyn Statement> = Box::new(func_decl_statement(interpreter, false));
             Vec::from([fun_stmt])
         },
         TokenType::VAR => {
