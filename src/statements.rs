@@ -1,12 +1,15 @@
 
 
+use std::process;
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
 use crate::class::Class;
+use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
 use crate::interpreter::block_scopes::BlockScopes;
-use crate::parser::declarations::RefObject;
+use crate::parser::declarations::{RefObject, Type};
 use crate::function::Function;
 use crate::parser::{declarations::Object, expressions::Expression};
+use crate::scanner::declarations::Token;
 mod simple_statement;
 pub mod classes_decl_stmt;
 pub mod controlflow_stmts;
@@ -188,11 +191,24 @@ impl FunctionDeclStatement {
 }
 
 pub struct ClassDeclStatement {
+    super_class_token: Option<Token>,
     class: Class
 }
 
 impl Statement for ClassDeclStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
+        if let Some(supclass_token) = &self.super_class_token {
+            if let Some(super_class) = state.get_variable(&supclass_token.lexeme.to_string()) {
+                if super_class.get_type() != Type::CLASS {
+                    handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
+                    process::exit(RUNTIME_ERROR_CODE);
+                }
+            }
+            else {
+
+            }
+        }
+        
         state.define_class(&self.class.name, self.class.clone());
         *current_stmt_ind += 1;
     }

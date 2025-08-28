@@ -7,13 +7,12 @@ use crate::{error_handler::RUNTIME_ERROR_CODE};
 use crate::parser::expressions::{Expression, InstanceGetSetExpr};
 use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 
-
-
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
     pub methods: Vec<Function>,
-    pub constructor: Option<Function>
+    pub constructor: Option<Function>,
+    pub super_class: Option<Box<Class>>
 }
 
 
@@ -37,7 +36,8 @@ impl Object for Class  {
         Box::new(Class{
             name: self.name.clone(),
             methods: self.methods.clone(),
-            constructor: self.constructor.clone()
+            constructor: self.constructor.clone(),
+            super_class: self.super_class.clone()
         })
     }
 }
@@ -112,30 +112,40 @@ impl Class {
             class: Rc::new(self.clone()),
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
+        let mut classes_tree_list = Vec::new();
+        let mut constructor = &self.constructor;
+        while let Some(super_class) = &self.super_class {
+            classes_tree_list.push(super_class.clone());
+            if let None = constructor {
+                constructor = &super_class.constructor;
+            }
+        }
+        classes_tree_list.push(Box::new(self.clone()));
+
         let this = String::from("this");
-        
-        if let Some(init_method) = &self.constructor {
+        if let Some(init_method) = constructor {
             let name = init_method.name.to_string();
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = init_method.clone();
-            func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+            func_copy.extra_map.insert(this, Rc::new(RefCell::new(instance_copy)));
             func_copy.call(params, out_func_state, line);
             instance.set(&name, Box::new(func_copy));
         }
-        //let mut attrs = HashMap::new();
-        for func in self.methods.iter() {
+        for class in classes_tree_list.iter().rev() {
+            self.set_methods_on_instance(&mut instance, class);   
+        }
+        instance
+    }
+
+    fn set_methods_on_instance(&self, instance: &mut ClassInstance, class: &Box<Class>) {
+        let this = String::from("this");
+        for func in class.methods.iter() {
             let name = func.name.to_string();
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = func.clone();
             func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             instance.set(&name, Box::new(func_copy));
-            // let func_obj: Box<dyn Object> = Box::new(func_copy);
-            // attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
-        //let instance_clone = instance.clone();
-        // let mut attrs_mut = instance.attributes.borrow_mut();
-        // *attrs_mut = attrs;
-        instance
     }
 }
 
