@@ -113,12 +113,14 @@ impl Class {
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let this = String::from("this");
+        let instance_copy: Box<dyn Object> = Box::new(instance.clone());
         if let Some(construct) = &self.constructor {
-            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut init  =  construct.clone();
             init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             init.call(params, out_func_state, line);
         }
+        let ident = String::from("x");
+        println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
 
         let mut attrs = HashMap::new();
         for func in self.methods.iter() {
@@ -129,10 +131,9 @@ impl Class {
             let func_obj: Box<dyn Object> = Box::new(func_copy);
             attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
-        let instance_clone = instance.clone();
-        let mut attrs_mut = instance_clone.attributes.borrow_mut();
+        let mut attrs_mut = instance.attributes.borrow_mut();
         *attrs_mut = attrs;
-        instance
+        instance.clone()
     }
 }
 
@@ -152,6 +153,7 @@ impl Expression for InstanceGetSetExpr {
         if let Some(value) =  &self.value_to_assign {
             let evaluated_value = value.evaluate(state_scope);
             class_instance.set(&identifier, evaluated_value.dyn_clone());
+            //println!("{} {} {}", class_instance.clone().to_string(), identifier.clone(), class_instance.clone().get(&identifier.clone()).unwrap().to_string());
             return evaluated_value;
         }
         else {
