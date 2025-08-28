@@ -1,4 +1,4 @@
-use std::io::{stderr, Write};
+use std::{io::{stderr, Write}, process};
 
 use crate::parser::expressions::Expression;
 
@@ -33,5 +33,6 @@ pub fn check_this_usage(expression: &Box<dyn Expression>, is_in_class_func: bool
     if expression.contains_identifier(&String::from("this")) && !is_in_class_func {
         handle_error(&expression.get_line(), ErrorType::SyntacticError, 
         "Error at 'this': Can't use 'this' outside of a class.");
+        process::exit(SYNTAXIC_ERROR_CODE)
     }
 }

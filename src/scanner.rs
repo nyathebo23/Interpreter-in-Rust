@@ -7,6 +7,8 @@ use crate::error_handler::ErrorType;
 use crate::scanner::declarations::*;
 use crate::scanner::utils::*;
 
+
+
 pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
     let mut token_list: Vec<Token> = Vec::new();
     let code_symbols: Vec<char> = file_text.chars().collect();
