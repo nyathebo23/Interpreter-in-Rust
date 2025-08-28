@@ -120,24 +120,24 @@ impl Class {
             init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             init.call(params, out_func_state, line);
         }
-
-        let mut attrs = HashMap::new();
-        for func in self.methods.iter() {
-            let name = func.name.to_string();
-            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
-            let mut func_copy = func.clone();
-            func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-            let func_obj: Box<dyn Object> = Box::new(func_copy);
-            attrs.insert(name, Rc::new(RefCell::new(func_obj)));
+        if self.methods.len() > 0 {
+            let mut attrs = HashMap::new();
+            for func in self.methods.iter() {
+                let name = func.name.to_string();
+                let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+                let mut func_copy = func.clone();
+                func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+                let func_obj: Box<dyn Object> = Box::new(func_copy);
+                attrs.insert(name, Rc::new(RefCell::new(func_obj)));
+            }
+            let instance_clone = instance.clone();
+            let mut attrs_mut = instance_clone.attributes.borrow_mut();
+            *attrs_mut = attrs;
         }
-        let instance_clone = instance.clone();
-        let mut attrs_mut = instance_clone.attributes.borrow_mut();
-        *attrs_mut = attrs;
-        {
-            let ident = String::from("x");
-            println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
-        }
-        instance.clone()
+        let ident = String::from("x");
+        println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
+        
+        instance
     }
 }
 
