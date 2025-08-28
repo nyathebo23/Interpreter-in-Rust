@@ -129,9 +129,10 @@ impl Class {
             let func_obj: Box<dyn Object> = Box::new(func_copy);
             attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
-        let mut attrs_mut = instance.attributes.borrow_mut();
+        let instance_clone = instance.clone();
+        let mut attrs_mut = instance_clone.attributes.borrow_mut();
         *attrs_mut = attrs;
-        instance.clone()
+        instance
     }
 }
 
