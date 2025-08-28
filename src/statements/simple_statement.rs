@@ -1,6 +1,6 @@
 use std::process;
 
-use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{check_this_usage, handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::interpreter::Interpreter;
 use crate::parser::declarations::NIL;
 use crate::parser::expressions::LiteralExpr;
@@ -8,16 +8,17 @@ use crate::scanner::declarations::TokenType;
 use crate::statements::{ExprStatement, PrintStatement, VarStatement};
 
 
-pub fn print_statement(interpreter: &mut Interpreter) -> PrintStatement {
+pub fn print_statement(interpreter: &mut Interpreter, is_in_class_func: bool) -> PrintStatement {
     interpreter.parser.next();
     let expr = interpreter.parser.expression();
+    check_this_usage(&expr, is_in_class_func);
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
     PrintStatement {
         expression: expr
     }
 }
 
-pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
+pub fn var_statement(interpreter: &mut Interpreter, is_in_class_func: bool) -> VarStatement {
     interpreter.parser.next();
     let identifier = interpreter.parser.current_token();
     let identifier_str = identifier.lexeme.to_string();
@@ -32,6 +33,7 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
     if token.token_type == TokenType::EQUAL {
         interpreter.parser.next();
         let expr = interpreter.parser.expression();
+        check_this_usage(&expr, is_in_class_func);
         interpreter.parser.check_token(TokenType::SEMICOLON, ";"); 
         return VarStatement {
             name: identifier_str,
@@ -47,8 +49,10 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
     }
 }
 
-pub fn expr_statement(interpreter: &mut Interpreter) -> ExprStatement {
+pub fn expr_statement(interpreter: &mut Interpreter, is_in_class_func: bool) -> ExprStatement {
     let expr = interpreter.parser.expression();
+    check_this_usage(&expr, is_in_class_func);
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
+
     ExprStatement { expression: expr }
 }

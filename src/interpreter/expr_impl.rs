@@ -51,6 +51,10 @@ impl Expression for CallExpr  {
         self.callable.contains_identifier(ident)
     }
 
+    fn get_line(&self) -> u32 {
+        self.line
+    }
+
     fn to_string(&self) -> String {
         self.callable.to_string()
     }
@@ -58,15 +62,6 @@ impl Expression for CallExpr  {
 
 impl Expression for IdentifierExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
-        let this = String::from("this");
-        if self.contains_identifier(&this) {
-            if let None = state_scope.get_variable(&this) {
-                handle_error(&self.line, ErrorType::SyntacticError, 
-                "Error at 'this': Can't use 'this' outside of a class.");
-                process::exit(SYNTAXIC_ERROR_CODE);
-            }
-            println!("azertyui")
-        }
         let current_value = state_scope.get_variable(&self.ident_name);
         if let Some(value) = current_value {
             match &self.value_to_assign {
@@ -93,6 +88,10 @@ impl Expression for IdentifierExpr {
         *ident == self.ident_name
     }
 
+    fn get_line(&self) -> u32 {
+        self.line
+    }
+
     fn to_string(&self) -> String {
         self.ident_name.to_string()
     }
@@ -113,6 +112,10 @@ impl Expression for LiteralExpr {
         process::exit(RUNTIME_ERROR_CODE)
     }
 
+    fn get_line(&self) -> u32 {
+        self.line
+    }
+
     fn to_string(&self) -> String {
         self.value.to_string()
     }
@@ -131,6 +134,10 @@ impl Expression for GroupExpr {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
+    }
+
+    fn get_line(&self) -> u32 {
+        self.line
     }
 
     fn to_string(&self) -> String {
@@ -177,6 +184,10 @@ impl  Expression for UnaryExpr {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         process::exit(RUNTIME_ERROR_CODE)
+    }
+
+    fn get_line(&self) -> u32 {
+        self.line
     }
 
     fn to_string(&self) -> String {
@@ -262,6 +273,10 @@ impl  Expression for BinaryExpr {
 
     fn contains_identifier(&self, ident: &String) -> bool {
         self.value1.contains_identifier(ident) || self.value1.contains_identifier(ident)
+    }
+
+    fn get_line(&self) -> u32 {
+        self.line
     }
 
     fn to_string(&self) -> String {

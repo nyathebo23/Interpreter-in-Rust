@@ -18,10 +18,10 @@ pub fn class_decl_statement(interpreter: &mut Interpreter) -> ClassDeclStatement
     while interpreter.parser.current_token().token_type != TokenType::RIGHTBRACE {
         let funcname = interpreter.parser.current_token().lexeme.to_string();
         if funcname == "init" {
-            constructor = Some(func_decl(interpreter, true));
+            constructor = Some(func_decl(interpreter, true, true));
             continue;
         }
-        methods.push(func_decl(interpreter, false));
+        methods.push(func_decl(interpreter, false, true));
     }
     
     interpreter.parser.check_token(TokenType::RIGHTBRACE, "}");

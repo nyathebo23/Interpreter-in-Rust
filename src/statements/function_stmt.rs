@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::process;
 use std::rc::Rc;
 
-use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{check_this_usage, handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::function::Function;
 use crate::interpreter::{Interpreter};
 use crate::parser::declarations::{NIL};
@@ -13,7 +13,7 @@ use crate::statements::simple_statement::var_statement;
 use crate::statements::{FunctionDeclStatement, ReturnStatement, Statement}; 
 
 
-pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool) -> ReturnStatement {
+pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool, is_in_class_func: bool) -> ReturnStatement {
     interpreter.parser.next();
     let token = interpreter.parser.current_token();
     if token.token_type == TokenType::SEMICOLON {
@@ -27,11 +27,13 @@ pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool) -> 
         process::exit(SYNTAXIC_ERROR_CODE);
     }
     let expr: Box<dyn Expression> = interpreter.parser.expression();
+    check_this_usage(&expr, is_in_class_func);
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
     ReturnStatement::new(expr)
 }
 
-pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>, 
+    is_init_method: bool, is_in_class_func: bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     let mut var_stmts_ident: Vec<String> = Vec::new(); 
     while interpreter.parser.current_index < interpreter.parser.size {
@@ -39,7 +41,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
         let line = token.line;
         match token.token_type {
             TokenType::VAR => {
-                let var_stmt = var_statement(interpreter);
+                let var_stmt = var_statement(interpreter, is_in_class_func);
                 if func_params.contains(&var_stmt.name) || var_stmts_ident.contains(&var_stmt.name) {
                     handle_error(&line, ErrorType::SyntacticError, 
                         format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
@@ -60,7 +62,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
             TokenType::FUN => {
                 stmts.push(Box::new(func_decl_statement(interpreter)));
             },
-            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, is_init_method))
+            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, is_init_method, is_in_class_func))
         } 
     }
 
@@ -71,7 +73,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
     process::exit(SYNTAXIC_ERROR_CODE);  
 }
 
-pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool) -> Function {
+pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_class_func: bool) -> Function {
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut params: Vec<String> = Vec::new();
@@ -97,7 +99,7 @@ pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool) -> Functio
 
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
     
-    let statements = block_func_statement(interpreter, &params, is_init_method);
+    let statements = block_func_statement(interpreter, &params, is_init_method, is_in_class_func);
     
     Function {
         name: ident_str.into(),
@@ -110,7 +112,7 @@ pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool) -> Functio
 pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
     interpreter.parser.next();
     FunctionDeclStatement {
-        function_decl: func_decl(interpreter, false),
+        function_decl: func_decl(interpreter, false, false),
     }
 }
 

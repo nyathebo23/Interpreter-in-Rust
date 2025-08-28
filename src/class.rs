@@ -143,7 +143,7 @@ impl Expression for InstanceGetSetExpr {
                 "Can only access property on class instance");
             process::exit(RUNTIME_ERROR_CODE);
         }
-        
+
         let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
         let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
         
@@ -172,6 +172,10 @@ impl Expression for InstanceGetSetExpr {
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         process::exit(RUNTIME_ERROR_CODE)
+    }
+
+    fn get_line(&self) -> u32 {
+        self.line
     }
 
     fn to_string(&self) -> String {

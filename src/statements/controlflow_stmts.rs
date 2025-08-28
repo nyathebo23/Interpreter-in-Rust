@@ -1,6 +1,6 @@
 use std::process;
 
-use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{check_this_usage, handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::interpreter::Interpreter; 
 use crate::statements::classes_decl_stmt::class_decl_statement;
 use crate::statements::function_stmt::{func_decl_statement, return_statement};
@@ -9,7 +9,8 @@ use crate::statements::{ BackToStatement, EndBlockStatement, ExprStatement, GoTo
 use crate::scanner::declarations::TokenType;
 use crate::parser::{declarations::Bool, expressions::{Expression, LiteralExpr}};
 
-pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool, 
+    is_in_class_func:bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     let mut var_stmts_ident: Vec<String> = Vec::new(); 
     stmts.push(Box::new(StartBlockStatement{}));
@@ -19,7 +20,7 @@ pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_meth
         let line = token.line;
         match token.token_type {
             TokenType::VAR => {
-                let var_stmt = var_statement(interpreter);
+                let var_stmt = var_statement(interpreter, is_in_class_func);
                 if var_stmts_ident.contains(&var_stmt.name) {
                     handle_error(&line, ErrorType::SyntacticError, 
                         format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
@@ -41,7 +42,7 @@ pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_meth
             TokenType::FUN => {
                 stmts.push(Box::new(func_decl_statement(interpreter)));
             },
-            _ => stmts.append(&mut block_statements(interpreter, token.token_type, is_in_func, is_init_method))
+            _ => stmts.append(&mut block_statements(interpreter, token.token_type, is_in_func, is_init_method, is_in_class_func))
         } 
     }
 
@@ -60,48 +61,49 @@ pub fn statement(interpreter: &mut Interpreter) -> Vec<Box<dyn Statement>> {
             Vec::from([fun_stmt])
         },
         TokenType::VAR => {
-            let var_stmt: Box<dyn Statement> = Box::new(var_statement(interpreter));
+            let var_stmt: Box<dyn Statement> = Box::new(var_statement(interpreter, false));
             Vec::from([var_stmt])
         },
-        _ => block_statements(interpreter, token.token_type, false, false)
+        _ => block_statements(interpreter, token.token_type, false, false, false)
     } 
 }
 
-fn statement_condition(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+fn statement_condition(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool, 
+    is_in_class_func: bool) -> Vec<Box<dyn Statement>> {
     let token = interpreter.parser.current_token();
     match token.token_type {
         TokenType::VAR | TokenType::FUN => {
             handle_error(&token.line, ErrorType::SyntacticError, "Error: Expect expression.");
             process::exit(SYNTAXIC_ERROR_CODE)
         },
-        _ => block_statements(interpreter, token.token_type, is_in_func, is_init_method)
+        _ => block_statements(interpreter, token.token_type, is_in_func, is_init_method, is_in_class_func)
     } 
 }
 
 pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType, 
-    is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+    is_in_func: bool, is_init_method: bool, is_in_class_func:bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     match tokentype {
         TokenType::CLASS => {
             stmts.push(Box::new(class_decl_statement(interpreter)));
         },
         TokenType::IDENTIFIER => {
-            stmts.push(Box::new(expr_statement(interpreter)));
+            stmts.push(Box::new(expr_statement(interpreter, is_in_class_func)));
         },
         TokenType::LEFTBRACE => {
-            stmts.append(&mut block_scope(interpreter, is_in_func, is_init_method));
+            stmts.append(&mut block_scope(interpreter, is_in_func, is_init_method, is_in_class_func));
         },
         TokenType::IF => {
-            stmts.append(&mut if_statement(interpreter, is_in_func, is_init_method));
+            stmts.append(&mut if_statement(interpreter, is_in_func, is_init_method, is_in_class_func));
         },
         TokenType::WHILE => {
-            stmts.append(&mut while_statement(interpreter, is_in_func, is_init_method));
+            stmts.append(&mut while_statement(interpreter, is_in_func, is_init_method, is_in_class_func));
         },
         TokenType::FOR => {
-            stmts.append(&mut for_statement(interpreter, is_in_func, is_init_method));
+            stmts.append(&mut for_statement(interpreter, is_in_func, is_init_method, is_in_class_func));
         },
         TokenType::PRINT => {
-            stmts.push(Box::new(print_statement(interpreter)));
+            stmts.push(Box::new(print_statement(interpreter, is_in_class_func)));
         },
         TokenType::RETURN => {
             if !is_in_func {
@@ -109,20 +111,21 @@ pub fn block_statements(interpreter: &mut Interpreter, tokentype: TokenType,
                 handle_error(&line, ErrorType::SyntacticError, "Error at 'return': Can't return from top-level code.");
                 process::exit(SYNTAXIC_ERROR_CODE);
             }
-            stmts.push(Box::new(return_statement(interpreter, is_init_method)));
+            stmts.push(Box::new(return_statement(interpreter, is_init_method, is_in_class_func)));
         },
         _ => {
-            stmts.push(Box::new(expr_statement(interpreter)));
+            stmts.push(Box::new(expr_statement(interpreter, is_in_class_func)));
         } 
     }
     return stmts;
 }
 
-pub fn if_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+pub fn if_statement(interpreter: &mut Interpreter, is_in_func: bool, 
+    is_init_method: bool, is_in_class_func:bool) -> Vec<Box<dyn Statement>> {
     interpreter.parser.next();
     let cond_expr = interpreter.parser.expression();
-    
-    let mut if_body = statement_condition(interpreter, is_in_func, is_init_method);
+    check_this_usage(&cond_expr, is_in_class_func);
+    let mut if_body = statement_condition(interpreter, is_in_func, is_init_method, is_in_class_func);
 
     let size_ifblock = if_body.len() + 2;
     let jumpif = jump(cond_expr, size_ifblock);
@@ -149,7 +152,8 @@ pub fn if_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_met
         if new_token.token_type == TokenType::IF {
             interpreter.parser.next();
             let sub_if_cond = interpreter.parser.expression();
-            let sub_if_body = statement_condition(interpreter, is_in_func, is_init_method);
+            check_this_usage(&sub_if_cond, is_in_class_func);
+            let sub_if_body = statement_condition(interpreter, is_in_func, is_init_method, is_in_class_func);
             let size_block = sub_if_body.len() + 2;
             stmt_count += size_block;
             conditions.push(sub_if_cond);
@@ -162,7 +166,7 @@ pub fn if_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_met
             break;
         }
         else {
-            let else_statement = statement_condition(interpreter, is_in_func, is_init_method);
+            let else_statement = statement_condition(interpreter, is_in_func, is_init_method, is_in_class_func);
             stmt_count += else_statement.len() + 1;
 
             else_stmt = Some(else_statement);
@@ -186,11 +190,13 @@ pub fn if_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_met
     result_stmts
 }
 
-pub fn while_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+pub fn while_statement(interpreter: &mut Interpreter, is_in_func: bool, 
+    is_init_method: bool, is_in_class_func: bool) -> Vec<Box<dyn Statement>> {
     interpreter.parser.next();
     let cond_expr = interpreter.parser.expression();
+    check_this_usage(&cond_expr, is_in_class_func);
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
-    let mut while_body = statement_condition(interpreter, is_in_func, is_init_method);
+    let mut while_body = statement_condition(interpreter, is_in_func, is_init_method, is_in_class_func);
 
     let size_whileblock = while_body.len() + 2;
     stmts.push(jump(cond_expr, size_whileblock));
@@ -199,7 +205,8 @@ pub fn while_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_
     stmts
 }
 
-pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_method: bool) -> Vec<Box<dyn Statement>> {
+pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool, 
+    is_init_method: bool, is_in_class_func: bool) -> Vec<Box<dyn Statement>> {
     interpreter.parser.next();
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     stmts.push(Box::new(StartBlockStatement{}));
@@ -207,10 +214,10 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_me
     let token = interpreter.parser.current_token();
     let line = token.line;
     if token.token_type == TokenType::VAR {
-        stmts.push(Box::new(var_statement(interpreter)));
+        stmts.push(Box::new(var_statement(interpreter, is_in_class_func)));
     }
     else if token.token_type == TokenType::IDENTIFIER {
-        stmts.push(Box::new(expr_statement(interpreter)));
+        stmts.push(Box::new(expr_statement(interpreter, is_in_class_func)));
     }
     else {
         interpreter.parser.check_token(TokenType::SEMICOLON, ";");
@@ -218,6 +225,7 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_me
     let mut condition: Box<dyn Expression> = Box::new(LiteralExpr::new(Box::new(Bool(true)), line)); 
     if interpreter.parser.current_token().token_type != TokenType::SEMICOLON {
         condition = interpreter.parser.expression();
+        check_this_usage(&condition, is_in_class_func);
     }
 
     let mut body_stmts: Vec<Box<dyn Statement>> = Vec::new();
@@ -228,7 +236,7 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool, is_init_me
         last_instruction = Some(interpreter.parser.expression());
     }
     interpreter.parser.check_token(TokenType::RIGHTPAREN, ")");
-    let mut for_body = statement_condition(interpreter, is_in_func, is_init_method);
+    let mut for_body = statement_condition(interpreter, is_in_func, is_init_method, is_in_class_func);
     body_stmts.append(&mut for_body);
     if let Some(expr) = last_instruction {
         let last_stmt = Box::new(ExprStatement{expression: expr});
