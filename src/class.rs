@@ -114,13 +114,13 @@ impl Class {
         };
         let mut classes_tree_list = Vec::new();
         let mut constructor = &self.constructor;
+
         while let Some(super_class) = &self.super_class {
             classes_tree_list.push(super_class.clone());
             if let None = constructor {
                 constructor = &super_class.constructor;
             }
         }
-        classes_tree_list.push(Box::new(self.clone()));
 
         let this = String::from("this");
         if let Some(init_method) = constructor {
@@ -134,6 +134,7 @@ impl Class {
         for class in classes_tree_list.iter().rev() {
             self.set_methods_on_instance(&mut instance, class);   
         }
+        self.set_methods_on_instance(&mut instance, &Box::new(self.clone()));
         instance
     }
 
