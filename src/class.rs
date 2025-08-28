@@ -155,6 +155,7 @@ impl Class {
         let this = String::from("this");
         for func in class.methods.iter() {
             let name = func.name.to_string();
+            println!("gfffffffgfff");
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = func.clone();
             func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
