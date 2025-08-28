@@ -97,22 +97,24 @@ impl Function {
             let mut val_mut = self.extra_map.get(var).unwrap().borrow_mut();
             *val_mut = new_value;
         }
-        let ret_value = match out_func_state.get_variable(&return_key) {
+        let mut ret_value = match out_func_state.get_variable(&return_key) {
             Some(ret_val ) => ret_val,
-            None => return_instance_on_func(self.name.to_string(), out_func_state, depth)
+            None => Box::new(NIL)
         };
+        if self.name.to_string() == "init" {
+            ret_value = return_instance_on_func(out_func_state, depth);
+        }
+        
         out_func_state.end_child_block();
         ret_value
     }
 
 }
 
-fn return_instance_on_func(func_name: String, out_func_state: &mut BlockScopes, depth: usize) -> Box<dyn Object> {
-    if func_name == "init" {
-        let this = String::from("this");
-        if let Some(instance) = out_func_state.get_variable_from(&this, depth) {
-            return instance;
-        }
+fn return_instance_on_func(out_func_state: &mut BlockScopes, depth: usize) -> Box<dyn Object> {
+    let this = String::from("this");
+    if let Some(instance) = out_func_state.get_variable_from(&this, depth) {
+        return instance;
     }
     return Box::new(NIL)
 }
