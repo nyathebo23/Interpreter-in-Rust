@@ -141,24 +141,8 @@ impl Expression for InstanceGetSetExpr {
         
         if let Some(value) =  &self.value_to_assign {
             let evaluated_value = value.evaluate(state_scope);
-            match &prop {
-                Some(property_val) => {
-                    if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
-                        class_instance.set(&identifier, evaluated_value.dyn_clone());
-                        return evaluated_value;
-                    }
-                    handle_error(&self.line, ErrorType::RuntimeError, "Cannot modify method on class instance");
-                    process::exit(RUNTIME_ERROR_CODE);
-                },
-                None => {
-                    if evaluated_value.get_type() != Type::FUNCTION {
-                        class_instance.set(&identifier, evaluated_value.dyn_clone());
-                        return evaluated_value;
-                    } 
-                    handle_error(&self.line, ErrorType::RuntimeError, "Cannot modify method on class instance");
-                    process::exit(RUNTIME_ERROR_CODE);
-                }
-            }
+            class_instance.set(&identifier, evaluated_value.dyn_clone());
+            return evaluated_value;
         }
         else {
             if let None = prop {
