@@ -19,9 +19,6 @@ impl Expression for CallExpr  {
         else if callable_val.get_type() == Type::CLASS {
             let class_call = callable_val.as_class().unwrap();
             let instance = class_call.call(&self.params, state_scope, &self.line);
-            let ident = String::from("x");
-            println!("{} {} {}", instance.clone().to_string(), ident.clone(), instance.clone().get(&ident.clone()).unwrap().to_string());
-
             Box::new(instance)
         }
         else {
