@@ -12,7 +12,8 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
-    pub methods: Vec<Function>
+    pub methods: Vec<Function>,
+    pub constructor: Option<Function>
 }
 
 
@@ -35,7 +36,8 @@ impl Object for Class  {
     fn dyn_clone(&self) -> Box<dyn Object> {
         Box::new(Class{
             name: self.name.clone(),
-            methods: self.methods.clone()
+            methods: self.methods.clone(),
+            constructor: self.constructor.clone()
         })
     }
 }
@@ -105,13 +107,18 @@ impl ToString for ClassInstance {
 
 
 impl Class {
-    pub fn call(&self, _params: &Vec<Box<dyn Expression>>, _out_func_state: &mut BlockScopes, _line: &u32) -> ClassInstance {
-
+    pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> ClassInstance {
         let instance = ClassInstance {
             class: Rc::new(self.clone()),
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let this = String::from("this");
+        if let Some(construct) = &self.constructor {
+            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+            let mut init  =  construct.clone();
+            init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+            init.call(params, out_func_state, line);
+        }
         let mut attrs = HashMap::new();
         for func in self.methods.iter() {
             let name = func.name.to_string();
@@ -136,6 +143,7 @@ impl Expression for InstanceGetSetExpr {
                 "Can only access property on class instance");
             process::exit(RUNTIME_ERROR_CODE);
         }
+        
         let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
         let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
         
@@ -147,7 +155,7 @@ impl Expression for InstanceGetSetExpr {
         else {
             if let None = prop {
                 handle_error(&self.line, ErrorType::RuntimeError, 
-                    format!("No property with name '{}'", identifier).as_str());
+                    format!("Undefined property '{}'", identifier).as_str());
                 process::exit(RUNTIME_ERROR_CODE);   
             }        
             return prop.unwrap();

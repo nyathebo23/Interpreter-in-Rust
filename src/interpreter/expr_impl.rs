@@ -58,6 +58,14 @@ impl Expression for CallExpr  {
 
 impl Expression for IdentifierExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
+        let this = String::from("this");
+        if self.contains_identifier(&this) {
+            if let None = state_scope.get_variable(&this) {
+                handle_error(&self.line, ErrorType::SyntacticError, 
+                "Error at 'this': Can't use 'this' outside of a class.");
+                process::exit(SYNTAXIC_ERROR_CODE);
+            }
+        }
         let current_value = state_scope.get_variable(&self.ident_name);
         if let Some(value) = current_value {
             match &self.value_to_assign {

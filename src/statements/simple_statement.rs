@@ -1,3 +1,6 @@
+use std::process;
+
+use crate::error_handler::{handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::interpreter::Interpreter;
 use crate::parser::declarations::NIL;
 use crate::parser::expressions::LiteralExpr;
@@ -18,6 +21,11 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
     interpreter.parser.next();
     let identifier = interpreter.parser.current_token();
     let identifier_str = identifier.lexeme.to_string();
+    if identifier_str == "this" {
+        handle_error(&identifier.line, ErrorType::SyntacticError, 
+            "Error at 'this': variable can't have name 'this'.");
+            process::exit(SYNTAXIC_ERROR_CODE)
+    }
     interpreter.parser.check_token(TokenType::IDENTIFIER, "identifier");
     let token = interpreter.parser.current_token();
     let line = token.line;

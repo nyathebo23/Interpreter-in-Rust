@@ -14,7 +14,8 @@ pub mod function_stmt;
 pub trait Statement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize);
 }
- 
+
+
 pub struct PrintStatement {
     pub expression: Box<dyn Expression>
 }

@@ -13,7 +13,7 @@ use crate::statements::simple_statement::var_statement;
 use crate::statements::{FunctionDeclStatement, ReturnStatement, Statement}; 
 
 
-pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
+pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool) -> ReturnStatement {
     interpreter.parser.next();
     let token = interpreter.parser.current_token();
     if token.token_type == TokenType::SEMICOLON {
@@ -21,12 +21,17 @@ pub fn return_statement(interpreter: &mut Interpreter) -> ReturnStatement {
         interpreter.parser.next();
         return ReturnStatement::new(nil_expr);
     }
+    if is_init_method {
+        let line = interpreter.parser.current_token().line;
+        handle_error(&line, ErrorType::SyntacticError, "Error at 'return': Can't return a value from an initializer");
+        process::exit(SYNTAXIC_ERROR_CODE);
+    }
     let expr: Box<dyn Expression> = interpreter.parser.expression();
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
     ReturnStatement::new(expr)
 }
 
-pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>) -> Vec<Box<dyn Statement>> {
+pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>, is_init_method: bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     let mut var_stmts_ident: Vec<String> = Vec::new(); 
     while interpreter.parser.current_index < interpreter.parser.size {
@@ -55,7 +60,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
             TokenType::FUN => {
                 stmts.push(Box::new(func_decl_statement(interpreter)));
             },
-            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true))
+            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, is_init_method))
         } 
     }
 
@@ -66,7 +71,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
     process::exit(SYNTAXIC_ERROR_CODE);  
 }
 
-pub fn func_decl(interpreter: &mut Interpreter) -> Function {
+pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool) -> Function {
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut params: Vec<String> = Vec::new();
@@ -92,7 +97,7 @@ pub fn func_decl(interpreter: &mut Interpreter) -> Function {
 
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
     
-    let statements = block_func_statement(interpreter, &params);
+    let statements = block_func_statement(interpreter, &params, is_init_method);
     
     Function {
         name: ident_str.into(),
@@ -105,7 +110,7 @@ pub fn func_decl(interpreter: &mut Interpreter) -> Function {
 pub fn func_decl_statement(interpreter: &mut Interpreter) -> FunctionDeclStatement {
     interpreter.parser.next();
     FunctionDeclStatement {
-        function_decl: func_decl(interpreter),
+        function_decl: func_decl(interpreter, false),
     }
 }
 
