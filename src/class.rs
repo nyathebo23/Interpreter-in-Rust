@@ -13,7 +13,6 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 pub struct Class {
     pub name: String,
     pub methods: Vec<Function>,
-    pub constructor: Option<Function>
 }
 
 
@@ -37,7 +36,6 @@ impl Object for Class  {
         Box::new(Class{
             name: self.name.clone(),
             methods: self.methods.clone(),
-            constructor: self.constructor.clone()
         })
     }
 }
@@ -108,25 +106,24 @@ impl ToString for ClassInstance {
 
 impl Class {
     pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> ClassInstance {
-        let mut instance = ClassInstance {
+        let instance = ClassInstance {
             class: Rc::new(self.clone()),
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let this = String::from("this");
-        
-        if let Some(construct) = &self.constructor {
-            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
-            let mut init  =  construct.clone();
-            init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-            init.call(params, out_func_state, line);
-            instance.set(&init.name, Box::new(init.clone()));
-        }
         if self.methods.len() > 0 {
             let mut attrs = HashMap::new();
             for func in self.methods.iter() {
                 let name = func.name.to_string();
                 let instance_copy: Box<dyn Object> = Box::new(instance.clone());
                 let mut func_copy = func.clone();
+                if name == "init" {
+                    func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+                    func_copy.call(params, out_func_state, line);
+                    let func_obj: Box<dyn Object> = Box::new(func_copy);
+                    attrs.insert(name, Rc::new(RefCell::new(func_obj)));
+                    continue;
+                }
                 func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
                 let func_obj: Box<dyn Object> = Box::new(func_copy);
                 attrs.insert(name, Rc::new(RefCell::new(func_obj)));
@@ -155,7 +152,6 @@ impl Expression for InstanceGetSetExpr {
         if let Some(value) =  &self.value_to_assign {
             let evaluated_value = value.evaluate(state_scope);
             class_instance.set(&identifier, evaluated_value.dyn_clone());
-            //println!("{} {} {}", class_instance.clone().to_string(), identifier.clone(), class_instance.clone().get(&identifier.clone()).unwrap().to_string());
             return evaluated_value;
         }
         else {
