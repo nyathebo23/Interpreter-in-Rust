@@ -198,17 +198,25 @@ pub struct ClassDeclStatement {
 impl Statement for ClassDeclStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         if let Some(supclass_token) = &self.super_class_token {
-            if let Some(super_class) = state.get_variable(&supclass_token.lexeme.to_string()) {
+            let super_class_name = supclass_token.lexeme.to_string();
+            if let Some(super_class) = state.get_variable(&super_class_name) {
                 if super_class.get_type() != Type::CLASS {
                     handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
                     process::exit(RUNTIME_ERROR_CODE);
                 }
+                else {
+                    let mut class = self.class.clone();
+                    class.super_class = Some(Box::new(super_class.as_class().unwrap().clone()));
+                    state.define_class(&self.class.name, self.class.clone());
+                    *current_stmt_ind += 1;
+                    return;
+                }
             }
             else {
-
+                handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
+                process::exit(RUNTIME_ERROR_CODE);
             }
         }
-        
         state.define_class(&self.class.name, self.class.clone());
         *current_stmt_ind += 1;
     }
