@@ -60,9 +60,11 @@ impl Expression for IdentifierExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
         let this = String::from("this");
         if self.contains_identifier(&this) {
+            println!("111111");
             if let None = state_scope.get_variable(&this) {
                 handle_error(&self.line, ErrorType::SyntacticError, 
                 "Error at 'this': Can't use 'this' outside of a class.");
+                println!("000000");
                 process::exit(SYNTAXIC_ERROR_CODE);
             }
         }
