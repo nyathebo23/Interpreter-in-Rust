@@ -8,6 +8,7 @@ use crate::parser::expressions::{Expression, InstanceGetSetExpr};
 use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 
 
+
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
@@ -103,21 +104,26 @@ impl ToString for ClassInstance {
 }
 
 
-
-
 impl Class {
     pub fn call(&self, _params: &Vec<Box<dyn Expression>>, _out_func_state: &mut BlockScopes, _line: &u32) -> ClassInstance {
+
+        let instance = ClassInstance {
+            class: Rc::new(self.clone()),
+            attributes: Rc::new(RefCell::new(HashMap::new())) 
+        };
+        let this = String::from("this");
         let mut attrs = HashMap::new();
         for func in self.methods.iter() {
             let name = func.name.to_string();
+            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+            let mut func_copy = func.clone();
+            func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             let func_obj: Box<dyn Object> = Box::new(func.clone());
             attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
-        let instance = ClassInstance {
-            class: Rc::new(self.clone()),
-            attributes: Rc::new(RefCell::new(attrs)) 
-        };
-        instance
+        let mut attrs_mut = instance.attributes.borrow_mut();
+        *attrs_mut = attrs;
+        instance.clone()
     }
 }
 
@@ -125,38 +131,44 @@ impl Class {
 impl Expression for InstanceGetSetExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
         let mut obj = self.instance.evaluate(state_scope);
-        if obj.get_type() == Type::CLASSINSTANCE {
-            let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
-            let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
-            
-            if let Some(value) =  &self.value_to_assign {
-                let evaluated_value = value.evaluate(state_scope);
-                match &prop {
-                    Some(property_val) => {
-                        if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
-                            class_instance.set(&identifier, evaluated_value.dyn_clone());
-                            return evaluated_value;
-                        }
-                    },
-                    None => {
-                        if evaluated_value.get_type() != Type::FUNCTION {
-                            class_instance.set(&identifier, evaluated_value.dyn_clone());
-                            return evaluated_value;
-                        } 
+        if obj.get_type() != Type::CLASSINSTANCE {
+            handle_error(&self.line, ErrorType::RuntimeError, 
+                "Can only access property on class instance");
+            process::exit(RUNTIME_ERROR_CODE);
+        }
+        let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
+        let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
+        
+        if let Some(value) =  &self.value_to_assign {
+            let evaluated_value = value.evaluate(state_scope);
+            match &prop {
+                Some(property_val) => {
+                    if property_val.get_type() != Type::FUNCTION && evaluated_value.get_type() != Type::FUNCTION {
+                        class_instance.set(&identifier, evaluated_value.dyn_clone());
+                        return evaluated_value;
                     }
+                    handle_error(&self.line, ErrorType::RuntimeError, "Cannot modify method on class instance");
+                    process::exit(RUNTIME_ERROR_CODE);
+                },
+                None => {
+                    if evaluated_value.get_type() != Type::FUNCTION {
+                        class_instance.set(&identifier, evaluated_value.dyn_clone());
+                        return evaluated_value;
+                    } 
+                    handle_error(&self.line, ErrorType::RuntimeError, "Cannot modify method on class instance");
+                    process::exit(RUNTIME_ERROR_CODE);
                 }
             }
-            else {
-                if let None = prop {
-                    handle_error(&self.line, ErrorType::RuntimeError, format!("No property with name '{}'", identifier).as_str());
-                    process::exit(RUNTIME_ERROR_CODE);   
-                }        
-                return prop.unwrap();
-            } 
         }
-        handle_error(&self.line, ErrorType::RuntimeError, 
-            "Can only access property on class instance");
-        process::exit(RUNTIME_ERROR_CODE);
+        else {
+            if let None = prop {
+                handle_error(&self.line, ErrorType::RuntimeError, 
+                    format!("No property with name '{}'", identifier).as_str());
+                process::exit(RUNTIME_ERROR_CODE);   
+            }        
+            return prop.unwrap();
+        } 
+        
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {

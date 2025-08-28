@@ -42,5 +42,5 @@ pub fn var_statement(interpreter: &mut Interpreter) -> VarStatement {
 pub fn expr_statement(interpreter: &mut Interpreter) -> ExprStatement {
     let expr = interpreter.parser.expression();
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
-    ExprStatement {expression: expr }
+    ExprStatement { expression: expr }
 }
