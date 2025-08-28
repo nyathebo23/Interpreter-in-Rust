@@ -108,7 +108,7 @@ impl ToString for ClassInstance {
 
 impl Class {
     pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> ClassInstance {
-        let instance = ClassInstance {
+        let mut instance = ClassInstance {
             class: Rc::new(self.clone()),
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
@@ -119,6 +119,7 @@ impl Class {
             let mut init  =  construct.clone();
             init.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
             init.call(params, out_func_state, line);
+            instance.set(&init.name, Box::new(init.clone()));
         }
         if self.methods.len() > 0 {
             let mut attrs = HashMap::new();
