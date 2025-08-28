@@ -13,6 +13,7 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 pub struct Class {
     pub name: String,
     pub methods: Vec<Function>,
+    pub constructor: Option<Function>
 }
 
 
@@ -36,6 +37,7 @@ impl Object for Class  {
         Box::new(Class{
             name: self.name.clone(),
             methods: self.methods.clone(),
+            constructor: self.constructor.clone()
         })
     }
 }
@@ -106,33 +108,34 @@ impl ToString for ClassInstance {
 
 impl Class {
     pub fn call(&self, params: &Vec<Box<dyn Expression>>, out_func_state: &mut BlockScopes, line: &u32) -> ClassInstance {
-        let mut instance = ClassInstance {
+        let instance = ClassInstance {
             class: Rc::new(self.clone()),
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let this = String::from("this");
+        let mut attributes_mut = instance.attributes.borrow_mut();
+        if let Some(init_method) = &self.constructor {
+            let name = init_method.name.to_string();
+            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+            let mut func_copy = init_method.clone();
+            func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+            func_copy.call(params, out_func_state, line);
+            attributes_mut.insert(name, Rc::new(RefCell::new(Box::new(func_copy))));
+        }
         //let mut attrs = HashMap::new();
         for func in self.methods.iter() {
             let name = func.name.to_string();
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = func.clone();
-            if name == "init" {
-                func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-                func_copy.call(params, out_func_state, line);
-                instance.set(&name, Box::new(func_copy));
-                // let func_obj: Box<dyn Object> = Box::new(func_copy);
-                // attrs.insert(name, Rc::new(RefCell::new(func_obj)));
-                continue;
-            }
             func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-            instance.set(&name, Box::new(func_copy));
+            attributes_mut.insert(name, Rc::new(RefCell::new(Box::new(func_copy))));
             // let func_obj: Box<dyn Object> = Box::new(func_copy);
             // attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
         //let instance_clone = instance.clone();
         // let mut attrs_mut = instance.attributes.borrow_mut();
         // *attrs_mut = attrs;
-        instance
+        instance.clone()
     }
 }
 
