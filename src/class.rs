@@ -131,13 +131,13 @@ impl Class {
             attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
         {
+            let ident = String::from("x");
+            println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
+        }
         let instance_clone = instance.clone();
         let mut attrs_mut = instance_clone.attributes.borrow_mut();
         *attrs_mut = attrs;
-        }
 
-        let ident = String::from("x");
-        println!("{} {} {}", instance.clone().to_string(), &ident, instance.clone().get(&ident.clone()).unwrap().to_string());
         instance.clone()
     }
 }
