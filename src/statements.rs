@@ -207,8 +207,7 @@ impl Statement for ClassDeclStatement {
                 else {
                     let mut class = self.class.clone();
                     class.super_class = Some(Box::new(super_class.as_class().unwrap().clone()));
-                    println!("azzzzzzzzzzzzzzzz");
-                    state.define_class(&self.class.name, self.class.clone());
+                    state.define_class(&class.name, class.clone());
                     *current_stmt_ind += 1;
                     return;
                 }
