@@ -118,7 +118,7 @@ impl Class {
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = func.clone();
             func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-            let func_obj: Box<dyn Object> = Box::new(func.clone());
+            let func_obj: Box<dyn Object> = Box::new(func_copy);
             attrs.insert(name, Rc::new(RefCell::new(func_obj)));
         }
         let mut attrs_mut = instance.attributes.borrow_mut();
