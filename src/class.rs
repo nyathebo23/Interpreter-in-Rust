@@ -113,8 +113,9 @@ impl Class {
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let this = String::from("this");
-        let mut attributes_mut = instance.attributes.borrow_mut();
+        
         if let Some(init_method) = &self.constructor {
+            let mut attributes_mut = instance.attributes.borrow_mut();
             let name = init_method.name.to_string();
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = init_method.clone();
@@ -124,6 +125,7 @@ impl Class {
         }
         //let mut attrs = HashMap::new();
         for func in self.methods.iter() {
+            let mut attributes_mut = instance.attributes.borrow_mut();
             let name = func.name.to_string();
             let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             let mut func_copy = func.clone();
@@ -135,7 +137,7 @@ impl Class {
         //let instance_clone = instance.clone();
         // let mut attrs_mut = instance.attributes.borrow_mut();
         // *attrs_mut = attrs;
-        instance.clone()
+        instance
     }
 }
 
