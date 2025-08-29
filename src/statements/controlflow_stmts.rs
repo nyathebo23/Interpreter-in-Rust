@@ -42,7 +42,8 @@ pub fn block_scope(interpreter: &mut Interpreter, is_in_func: bool, is_init_meth
             TokenType::FUN => {
                 stmts.push(Box::new(func_decl_statement(interpreter, is_in_class_func, is_in_superclass)));
             },
-            _ => stmts.append(&mut block_statements(interpreter, token.token_type, is_in_func, is_init_method, is_in_class_func, is_in_superclass))
+            _ => stmts.append(&mut block_statements(interpreter, token.token_type, is_in_func, 
+                is_init_method, is_in_class_func, is_in_superclass))
         } 
     }
 
@@ -230,8 +231,8 @@ pub fn for_statement(interpreter: &mut Interpreter, is_in_func: bool,
     let mut condition: Box<dyn Expression> = Box::new(LiteralExpr::new(Box::new(Bool(true)), line)); 
     if interpreter.parser.current_token().token_type != TokenType::SEMICOLON {
         condition = interpreter.parser.expression();
-        check_class_keywords_usage(&condition, is_in_class_func, is_in_superclass);
     }
+    check_class_keywords_usage(&condition, is_in_class_func, is_in_superclass);
 
     let mut body_stmts: Vec<Box<dyn Statement>> = Vec::new();
 
