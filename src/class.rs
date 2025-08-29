@@ -136,10 +136,6 @@ impl Class {
         for class in classes_tree_list.iter().rev() {
             self.set_methods_on_instance(&mut instance, class);   
         }
-        let mut instance = ClassInstance {
-            class: Rc::new(self.clone()),
-            attributes: Rc::new(RefCell::new(HashMap::new())) 
-        };
 
         self.set_methods_on_instance(&mut instance, &Box::new(self.clone()));
         instance
@@ -196,7 +192,7 @@ impl Expression for InstanceGetSetExpr {
                 "Can only access property on class instance");
             process::exit(RUNTIME_ERROR_CODE);
         }
-        
+
         let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
         let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
         
