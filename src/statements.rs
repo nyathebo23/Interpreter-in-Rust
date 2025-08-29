@@ -1,10 +1,9 @@
 
 
-use std::process;
 use std::{cell::RefCell, collections::HashMap, rc::Rc, usize::MAX};
 
 use crate::class::Class;
-use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
+use crate::error_handler::{handle_error, ErrorType};
 use crate::interpreter::block_scopes::BlockScopes;
 use crate::parser::declarations::{RefObject, Type};
 use crate::function::Function;
@@ -200,11 +199,7 @@ impl Statement for ClassDeclStatement {
         if let Some(supclass_token) = &self.super_class_token {
             let super_class_name = supclass_token.lexeme.to_string();
             if let Some(super_class) = state.get_variable(&super_class_name) {
-                if super_class.get_type() != Type::CLASS {
-                    handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
-                    process::exit(RUNTIME_ERROR_CODE);
-                }
-                else {
+                if super_class.get_type() == Type::CLASS {
                     let mut class = self.class.clone();
                     class.super_class = Some(Box::new(super_class.as_class().unwrap().clone()));
                     state.define_class(&class.name, class.clone());
@@ -212,10 +207,7 @@ impl Statement for ClassDeclStatement {
                     return;
                 }
             }
-            else {
-                handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
-                process::exit(RUNTIME_ERROR_CODE);
-            }
+            handle_error(&supclass_token.line, ErrorType::RuntimeError, "Superclass must be a class.");
         }
         state.define_class(&self.class.name, self.class.clone());
         *current_stmt_ind += 1;

@@ -1,6 +1,6 @@
-use std::process;
+
 use std::rc::Rc;
-use crate::error_handler::{handle_error, ErrorType,  SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{handle_error, ErrorType};
 use crate::parser::declarations::{Bool, Number, Str, NIL};
 use crate::parser::operators_decl::{operators_priority_list, OpChainPriority, UnaryOperator};
 use crate::scanner::declarations::*;
@@ -84,7 +84,6 @@ impl Parser<'_> {
             _ => {
                 handle_error(&token.line, ErrorType::SyntacticError, 
                     format!("Error at {0}: Expect expression.", token.lexeme).as_str());
-                process::exit(SYNTAXIC_ERROR_CODE);
             }
         };
         self.next();
@@ -200,7 +199,6 @@ impl Parser<'_> {
 
     fn exit_error(&self, line: &u32, text: &str) {
         handle_error(line, ErrorType::SyntacticError, text);
-        process::exit(SYNTAXIC_ERROR_CODE);  
     }
 
     fn check_token_valid(&self, tokentype: TokenType, lexeme: &str) {
@@ -237,7 +235,6 @@ impl Parser<'_> {
     if token.token_type != tokentype {
         handle_error(&token.line, ErrorType::SyntacticError, 
             format!("Error at '{}': Expect {}", token.lexeme, lexeme).as_str());
-        process::exit(SYNTAXIC_ERROR_CODE);  
     }  
     self.next();
 }

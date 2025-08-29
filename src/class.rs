@@ -190,7 +190,6 @@ impl Expression for InstanceGetSetExpr {
         if obj.get_type() != Type::CLASSINSTANCE {
             handle_error(&self.line, ErrorType::RuntimeError, 
                 "Can only access property on class instance");
-            process::exit(RUNTIME_ERROR_CODE);
         }
 
         let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
@@ -205,7 +204,6 @@ impl Expression for InstanceGetSetExpr {
             if let None = prop {
                 handle_error(&self.line, ErrorType::RuntimeError, 
                     format!("Undefined property '{}'", identifier).as_str());
-                process::exit(RUNTIME_ERROR_CODE);   
             }
             return prop.unwrap();
         } 

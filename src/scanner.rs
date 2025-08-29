@@ -159,7 +159,6 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                     Err(err) => {
                         *has_error = true;
                         handle_error(&line, ErrorType::LexicalError, err.as_str());
-                        break;
                     }
                 }
             },
@@ -179,7 +178,6 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         Err(err) => {
                             *has_error = true;
                             handle_error(&line, ErrorType::LexicalError, err.as_str());
-                            break;
                         }
                     }
                     continue;
@@ -203,14 +201,12 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         Err(err) => {
                             *has_error = true;
                             handle_error(&line, ErrorType::LexicalError, err.as_str());
-                            break;
                         }
                     }
                     continue;
                 }
                 else {
                     handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
-                    *has_error = true;
                 }
             }
         }

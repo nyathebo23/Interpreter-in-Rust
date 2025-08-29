@@ -3,6 +3,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::process;
 
+use crate::compiler::Compiler;
 use crate::error_handler::LEXICAL_ERROR_CODE;
 use crate::interpreter::block_scopes::BlockScopes;
 use crate::interpreter::Interpreter;
@@ -12,7 +13,6 @@ use crate::scanner::tokenize;
 mod scanner;
 mod error_handler;
 mod parser;
-mod tokenizer;
 mod statements;
 mod function;
 mod interpreter;
@@ -78,8 +78,9 @@ fn main() {
                 process::exit(LEXICAL_ERROR_CODE);
             }
             let parser = Parser::new(&tokens, 0);
-            let mut interpreter = Interpreter::new(parser);
-            interpreter.compile();
+            let compiler = Compiler::new(parser);
+            let mut interpreter = Interpreter::new(compiler);
+            interpreter.exec();
         },
         _ => {
             writeln!(io::stderr(), "Unknown command: {}", command).unwrap();

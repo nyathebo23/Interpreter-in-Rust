@@ -1,9 +1,8 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::process;
 use std::rc::Rc;
 
-use crate::error_handler::{handle_error, ErrorType, RUNTIME_ERROR_CODE};
+use crate::error_handler::{handle_error, ErrorType};
 use crate::interpreter::block_scopes::BlockScopes;
 use crate::interpreter::Interpreter;
 use crate::parser::declarations::{Number, Object, RefObject, ValueObjTrait, NIL};
@@ -67,9 +66,7 @@ impl Function {
         let (expect_params_len, recv_params_len) = (self.params_names.len(), params.len());
         if expect_params_len != recv_params_len {
             handle_error(line, ErrorType::RuntimeError, 
-                format!("Expected {} arguments but got {}", expect_params_len, recv_params_len).as_str());
-            process::exit(RUNTIME_ERROR_CODE);
-        }
+                format!("Expected {} arguments but got {}", expect_params_len, recv_params_len).as_str());        }
         if self.name.as_str() == "clock" {
             return Box::new(Number(clock() as f64));
         }
