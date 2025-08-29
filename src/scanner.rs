@@ -209,7 +209,8 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                     continue;
                 }
                 else {
-                    //stderr.write(format!("[line {line}] Error: {error_text}\n").as_bytes())
+                    let mut stderr = stderr();
+                    let _ = stderr.write(format!("[line {line}] Error: Unexpected character: {c}\n").as_bytes());
                     *has_error = true;
                 }
             }
