@@ -100,6 +100,25 @@ impl Parser<'_> {
         match token.token_type {
             TokenType::MINUS => self.get_unary_expr(token, UnaryOperator::MINUS),
             TokenType::BANG => self.get_unary_expr(token, UnaryOperator::BANG),
+            TokenType::THIS => {
+                let first_term_expr = Box::new(
+                    IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
+                ); 
+                self.next();
+                return self.assignment_expr(first_term_expr);
+            },
+            TokenType::SUPER => {
+                let first_term_expr = Box::new(
+                    IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
+                ); 
+                self.next();
+                let next_token = self.current_token();
+                if next_token.token_type != TokenType::DOT {
+                    self.exit_error(&token.line, 
+                        format!("Error at '{}': Expect '.' after 'super'.", next_token.lexeme).as_str());
+                }
+                return self.assignment_expr(first_term_expr);
+            },
             _ => {
                 let simple_expr = self.simple_expression();
                 return self.assignment_expr(simple_expr);
@@ -107,13 +126,11 @@ impl Parser<'_> {
         }
     }
 
-
     fn assignment_expr(&mut self, simple_expr: Box<dyn Expression>) -> Box<dyn Expression> {
         let token = &self.tokens_list[self.current_index - 1];
         if self.current_index + 1 >= self.size || token.token_type == TokenType::RIGHTBRACE {
             return simple_expr
         }
-
         let ident_str = token.lexeme.to_string();
 
         let mut next_token = &self.tokens_list[self.current_index];

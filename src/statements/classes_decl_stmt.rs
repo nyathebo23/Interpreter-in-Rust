@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::process;
 
 use crate::class::Class;
@@ -14,7 +15,9 @@ pub fn class_decl_statement(interpreter: &mut Interpreter) -> ClassDeclStatement
     let class_name = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut super_class_name = None;
+    let mut is_sup_class = false;
     if interpreter.parser.current_token().token_type == TokenType::LESS {
+        is_sup_class = true;
         interpreter.parser.next();
         let token = interpreter.parser.current_token().clone();
         interpreter.parser.check_token(TokenType::IDENTIFIER, "Identifier");
@@ -27,15 +30,15 @@ pub fn class_decl_statement(interpreter: &mut Interpreter) -> ClassDeclStatement
     }
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
 
-    let mut methods = Vec::new();
+    let mut methods = HashMap::new();
     let mut constructor: Option<Function> = None;  
     while interpreter.parser.current_token().token_type != TokenType::RIGHTBRACE {
         let funcname = interpreter.parser.current_token().lexeme.to_string();
         if funcname == "init" {
-            constructor = Some(func_decl(interpreter, true, true));
+            constructor = Some(func_decl(interpreter, true, true, is_sup_class));
             continue;
         }
-        methods.push(func_decl(interpreter, false, true));
+        methods.insert(funcname, func_decl(interpreter, false, true, is_sup_class));
     }
     
     interpreter.parser.check_token(TokenType::RIGHTBRACE, "}");

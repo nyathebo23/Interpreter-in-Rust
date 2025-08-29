@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::process;
 use std::rc::Rc;
 
-use crate::error_handler::{check_this_usage, handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
+use crate::error_handler::{check_class_keywords_usage, handle_error, ErrorType, SYNTAXIC_ERROR_CODE};
 use crate::function::Function;
 use crate::interpreter::{Interpreter};
 use crate::parser::declarations::{NIL};
@@ -13,7 +13,8 @@ use crate::statements::simple_statement::var_statement;
 use crate::statements::{FunctionDeclStatement, ReturnStatement, Statement}; 
 
 
-pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool, is_in_class_func: bool) -> ReturnStatement {
+pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool, 
+    is_in_class_func: bool, is_in_superclass: bool) -> ReturnStatement {
     interpreter.parser.next();
     let token = interpreter.parser.current_token();
     if token.token_type == TokenType::SEMICOLON {
@@ -27,13 +28,13 @@ pub fn return_statement(interpreter: &mut Interpreter, is_init_method: bool, is_
         process::exit(SYNTAXIC_ERROR_CODE);
     }
     let expr: Box<dyn Expression> = interpreter.parser.expression();
-    check_this_usage(&expr, is_in_class_func);
+    check_class_keywords_usage(&expr, is_in_class_func, is_in_superclass);
     interpreter.parser.check_token(TokenType::SEMICOLON, ";");
     ReturnStatement::new(expr)
 }
 
 pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<String>, 
-    is_init_method: bool, is_in_class_func: bool) -> Vec<Box<dyn Statement>> {
+    is_init_method: bool, is_in_class_func: bool, is_in_superclass: bool) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     let mut var_stmts_ident: Vec<String> = Vec::new(); 
     while interpreter.parser.current_index < interpreter.parser.size {
@@ -41,7 +42,7 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
         let line = token.line;
         match token.token_type {
             TokenType::VAR => {
-                let var_stmt = var_statement(interpreter, is_in_class_func);
+                let var_stmt = var_statement(interpreter, is_in_class_func, is_in_superclass);
                 if func_params.contains(&var_stmt.name) || var_stmts_ident.contains(&var_stmt.name) {
                     handle_error(&line, ErrorType::SyntacticError, 
                         format!("Error at {}: Already a variable with this name in this scope.", var_stmt.name.clone()).as_str());
@@ -60,9 +61,10 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
                 return stmts;
             },
             TokenType::FUN => {
-                stmts.push(Box::new(func_decl_statement(interpreter, is_in_class_func)));
+                stmts.push(Box::new(func_decl_statement(interpreter, is_in_class_func, is_in_superclass)));
             },
-            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, is_init_method, is_in_class_func))
+            _ => stmts.append(&mut block_statements(interpreter, token.token_type, true, 
+                is_init_method, is_in_class_func, is_in_superclass))
         } 
     }
 
@@ -73,7 +75,8 @@ pub fn block_func_statement(interpreter: &mut Interpreter, func_params: &Vec<Str
     process::exit(SYNTAXIC_ERROR_CODE);  
 }
 
-pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_class_func: bool) -> Function {
+pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_class_func: bool, 
+        is_in_superclass: bool) -> Function {
     let ident_str = interpreter.parser.current_token().lexeme.to_string();
     interpreter.parser.next();        
     let mut params: Vec<String> = Vec::new();
@@ -99,7 +102,7 @@ pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_clas
 
     interpreter.parser.check_token(TokenType::LEFTBRACE, "{");
     
-    let statements = block_func_statement(interpreter, &params, is_init_method, is_in_class_func);
+    let statements = block_func_statement(interpreter, &params, is_init_method, is_in_class_func, is_in_superclass);
     
     Function {
         name: ident_str.into(),
@@ -109,10 +112,10 @@ pub fn func_decl(interpreter: &mut Interpreter, is_init_method: bool, is_in_clas
     }
 }
 
-pub fn func_decl_statement(interpreter: &mut Interpreter, is_in_class_func: bool) -> FunctionDeclStatement {
+pub fn func_decl_statement(interpreter: &mut Interpreter, is_in_class_func: bool, is_in_superclass: bool) -> FunctionDeclStatement {
     interpreter.parser.next();
     FunctionDeclStatement {
-        function_decl: func_decl(interpreter, false, is_in_class_func),
+        function_decl: func_decl(interpreter, false, is_in_class_func, is_in_superclass),
     }
 }
 

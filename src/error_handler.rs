@@ -29,10 +29,24 @@ pub fn handle_error(line: &u32, error_type: ErrorType, error_text: &str) {
     }
 }
 
-pub fn check_this_usage(expression: &Box<dyn Expression>, is_in_class_func: bool) {
-    if expression.contains_identifier(&String::from("this")) && !is_in_class_func {
-        handle_error(&expression.get_line(), ErrorType::SyntacticError, 
-        "Error at 'this': Can't use 'this' outside of a class.");
-        process::exit(SYNTAXIC_ERROR_CODE)
+pub fn check_class_keywords_usage(expression: &Box<dyn Expression>, is_in_class_func: bool, is_in_superclass: bool) {
+    if !is_in_class_func {
+        compile_keyword_class_err(expression, "this");
+        compile_keyword_class_err(expression, "super");
     }
+    else {
+        if !is_in_superclass && expression.contains_identifier(&String::from("super")) {
+            handle_error(&expression.get_line(), ErrorType::SyntacticError, 
+            "Error at 'super': Can't use 'super' in a class with no superclass");
+            process::exit(SYNTAXIC_ERROR_CODE)
+        }
+    }
+}
+
+fn compile_keyword_class_err(expr: &Box<dyn Expression>, keyword: &str) {
+    if expr.contains_identifier(&String::from(keyword)) {
+        handle_error(&expr.get_line(), ErrorType::SyntacticError, 
+        format!("Error at '{}': Can't use '{}' outside of a class.", keyword, keyword).as_str());
+        process::exit(SYNTAXIC_ERROR_CODE)
+    }    
 }

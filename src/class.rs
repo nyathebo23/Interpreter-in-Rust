@@ -10,7 +10,7 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
-    pub methods: Vec<Function>,
+    pub methods: HashMap<String, Function>,
     pub constructor: Option<Function>,
     pub super_class: Option<Box<Class>>
 }
@@ -132,9 +132,15 @@ impl Class {
             func_copy.call(params, out_func_state, line);
             instance.set(&name, Box::new(func_copy));
         }
+
         for class in classes_tree_list.iter().rev() {
             self.set_methods_on_instance(&mut instance, class);   
         }
+        let mut instance = ClassInstance {
+            class: Rc::new(self.clone()),
+            attributes: Rc::new(RefCell::new(HashMap::new())) 
+        };
+
         self.set_methods_on_instance(&mut instance, &Box::new(self.clone()));
         instance
     }
@@ -153,13 +159,31 @@ impl Class {
 
     fn set_methods_on_instance(&self, instance: &mut ClassInstance, class: &Box<Class>) {
         let this = String::from("this");
-        for func in class.methods.iter() {
-            let name = func.name.to_string();
-            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
-            let mut func_copy = func.clone();
-            func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
-            instance.set(&name, Box::new(func_copy));
+        if let Some(superclass) = &class.super_class {
+            let super_str = String::from("super");
+            let mut parent_instance = ClassInstance {
+                class: Rc::new(*superclass.clone()),
+                attributes: Rc::new(RefCell::new(HashMap::new())) 
+            };   
+            self.set_methods_on_instance(&mut parent_instance, &superclass);
+            for (func_name, func) in class.methods.iter() {
+                let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+                let mut func_copy = func.clone();
+                func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+                let parent_obj: Box<dyn Object> = Box::new(parent_instance.clone());
+                func_copy.extra_map.insert(super_str.clone(), Rc::new(RefCell::new(parent_obj)));
+                instance.set(func_name, Box::new(func_copy));
+            }
         }
+        else {
+            for (func_name, func) in class.methods.iter() {
+                let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+                let mut func_copy = func.clone();
+                func_copy.extra_map.insert(this.clone(), Rc::new(RefCell::new(instance_copy)));
+                instance.set(func_name, Box::new(func_copy));
+            }
+        }
+
     }
 }
 
@@ -172,7 +196,7 @@ impl Expression for InstanceGetSetExpr {
                 "Can only access property on class instance");
             process::exit(RUNTIME_ERROR_CODE);
         }
-
+        
         let class_instance: &mut ClassInstance = obj.as_class_instance().unwrap();
         let (identifier, prop) = self.property.value_from_class_instance(class_instance, state_scope);
         
