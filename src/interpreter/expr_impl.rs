@@ -5,7 +5,6 @@ use crate::interpreter::{block_scopes::BlockScopes, utils::*};
 use crate::parser::declarations::*;
 use crate::parser::expressions::*;
 use crate::parser::operators_decl::*;
-use std::process;
 use crate::error_handler::*;
 
 impl Expression for CallExpr  {
@@ -24,7 +23,7 @@ impl Expression for CallExpr  {
         else {
             handle_error(&self.line, ErrorType::RuntimeError, 
                 "Can only call functions and classes.");
-            process::exit(RUNTIME_ERROR_CODE); 
+             
         }
         
     }
@@ -34,12 +33,10 @@ impl Expression for CallExpr  {
         if let Some(func) = func_option {
             if func.get_type() != Type::FUNCTION {
                 handle_error(&self.line, ErrorType::RuntimeError, "Expect function");
-                process::exit(RUNTIME_ERROR_CODE)
             }
             return (identifier, Some((func.as_function().unwrap()).call(&self.params, state_scope, &self.line)));
         }
         handle_error(&self.line, ErrorType::RuntimeError, format!("No Callable with name '{}'", identifier).as_str());
-        process::exit(RUNTIME_ERROR_CODE)
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {
@@ -77,7 +74,7 @@ impl Expression for IdentifierExpr {
         }
         handle_error(&self.line, ErrorType::RuntimeError, 
             format!("Undefined variable '{}'.", self.ident_name).as_str());
-        process::exit(RUNTIME_ERROR_CODE);
+        
     }
 
     fn value_from_class_instance(&self, instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
@@ -109,7 +106,7 @@ impl Expression for LiteralExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        process::exit(RUNTIME_ERROR_CODE)
+        
     }
 
     fn get_line(&self) -> u32 {
@@ -133,7 +130,7 @@ impl Expression for GroupExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        process::exit(RUNTIME_ERROR_CODE)
+        
     }
 
     fn get_line(&self) -> u32 {
@@ -169,7 +166,7 @@ impl  Expression for UnaryExpr {
                     },
                     _ => {
                         handle_error(&self.line, ErrorType::RuntimeError, "Operand must be a number.");
-                        process::exit(RUNTIME_ERROR_CODE);
+                        
                     }
                 }
             }
@@ -183,7 +180,7 @@ impl  Expression for UnaryExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        process::exit(RUNTIME_ERROR_CODE)
+        
     }
 
     fn get_line(&self) -> u32 {
@@ -268,7 +265,7 @@ impl  Expression for BinaryExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        process::exit(RUNTIME_ERROR_CODE)
+        
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {

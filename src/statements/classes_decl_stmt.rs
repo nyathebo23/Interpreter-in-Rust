@@ -33,10 +33,15 @@ pub fn class_decl_statement(compiler: &mut Compiler) -> ClassDeclStatement {
     while compiler.parser.current_token().token_type != TokenType::RIGHTBRACE {
         let funcname = compiler.parser.current_token().lexeme.to_string();
         if funcname == "init" {
+            compiler.environment.start_init_class_func();
             constructor = Some(func_decl(compiler));
+            compiler.environment.end_init_class_func();
             continue;
         }
+        compiler.environment.start_function();
         methods.insert(funcname, func_decl(compiler,));
+        compiler.environment.end_function();
+
     }
     
     compiler.parser.check_token(TokenType::RIGHTBRACE, "}");
