@@ -212,9 +212,10 @@ impl Expression for InstanceGetSetExpr {
     }
 
     fn contains_identifier(&self, ident: &String) -> bool {
+        let contain_ident = self.instance.contains_identifier(ident) || self.property.contains_identifier(ident);
         match &self.value_to_assign {
-            Some(val) => val.contains_identifier(ident),
-            None => false
+            Some(val) => contain_ident || val.contains_identifier(ident),
+            None => contain_ident
         }
     }
 
