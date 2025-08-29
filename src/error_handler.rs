@@ -3,7 +3,6 @@ use std::{io::{stderr, Write}, process};
 use crate::{compiler::environment::{ClassType, Environment, FunctionType}, parser::expressions::Expression};
 
 pub enum ErrorType {
-    LexicalError,
     SyntacticError,
     RuntimeError
 }
@@ -16,10 +15,6 @@ pub const LEXICAL_ERROR_CODE: i32 = 65;
 pub fn handle_error(line: &u32, error_type: ErrorType, error_text: &str) -> ! {
     let mut stderr = stderr();
     match error_type {
-        ErrorType::LexicalError => {
-            let _ = stderr.write(format!("[line {line}] Error: {error_text}\n").as_bytes());
-            process::exit(LEXICAL_ERROR_CODE)
-        },
         ErrorType::RuntimeError => {
             let _ = stderr.write(format!("{error_text}\n[line {line}]\n").as_bytes());
             process::exit(RUNTIME_ERROR_CODE)

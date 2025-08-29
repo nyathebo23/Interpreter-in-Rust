@@ -2,12 +2,9 @@ pub mod declarations;
 pub mod utils;
 
 use std::borrow::Cow;
-use crate::error_handler::handle_error;
-use crate::error_handler::ErrorType;
+use std::io::{stderr, Write};
 use crate::scanner::declarations::*;
 use crate::scanner::utils::*;
-
-
 
 pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
     let mut token_list: Vec<Token> = Vec::new();
@@ -158,7 +155,9 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                     },
                     Err(err) => {
                         *has_error = true;
-                        handle_error(&line, ErrorType::LexicalError, err.as_str());
+                        let mut stderr = stderr();
+                        let _ = stderr.write(format!("[line {line}] Error: {err}\n").as_bytes());
+                        break;
                     }
                 }
             },
@@ -177,7 +176,9 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         },
                         Err(err) => {
                             *has_error = true;
-                            handle_error(&line, ErrorType::LexicalError, err.as_str());
+                            let mut stderr = stderr();
+                            let _ = stderr.write(format!("[line {line}] Error: {err}\n").as_bytes());                            
+                            break;
                         }
                     }
                     continue;
@@ -200,13 +201,16 @@ pub fn tokenize(file_text: String, has_error: &mut bool) -> Vec<Token> {
                         },
                         Err(err) => {
                             *has_error = true;
-                            handle_error(&line, ErrorType::LexicalError, err.as_str());
+                            let mut stderr = stderr();
+                            let _ = stderr.write(format!("[line {line}] Error: {err}\n").as_bytes());
+                            break;
                         }
                     }
                     continue;
                 }
                 else {
-                    handle_error(&line, ErrorType::LexicalError, format!("Unexpected character: {c}").as_str());
+                    //stderr.write(format!("[line {line}] Error: {error_text}\n").as_bytes())
+                    *has_error = true;
                 }
             }
         }
