@@ -35,7 +35,7 @@ pub fn check_class_keywords_usage(expression: &Box<dyn Expression>, is_in_class_
         compile_keyword_class_err(expression, "super");
     }
     else {
-        println!("11111111111111 {}", is_in_superclass);
+        println!("{}", expression.to_string());
         if !is_in_superclass && expression.contains_identifier(&String::from("super")) {
             handle_error(&expression.get_line(), ErrorType::SyntacticError, 
             "Error at 'super': Can't use 'super' in a class with no superclass");
