@@ -17,6 +17,7 @@ mod statements;
 mod function;
 mod interpreter;
 mod class;
+mod compiler;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
