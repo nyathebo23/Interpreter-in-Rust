@@ -2,6 +2,7 @@
 use std::{borrow::Cow, cell::RefCell, ops::{Add, Div, Mul, Sub}, rc::Rc};
 use crate::{class::{Class, ClassInstance}, function::Function, scanner::utils::literal_number};
 
+pub type RefObject = Rc<RefCell<Box<dyn Object>>>;
 
 #[derive(PartialEq)]
 pub enum Type {
@@ -18,6 +19,12 @@ pub trait Object: ValueObjTrait + ToString {
     fn to_str(&self) -> Cow<'static, str>;
     fn get_type(&self) -> Type;
     fn dyn_clone(&self) -> Box<dyn Object>;
+}
+
+impl Clone for Box<dyn Object> {
+    fn clone(&self) -> Self {
+        self.dyn_clone()
+    }
 }
 
 pub trait ValueObjTrait {
@@ -46,7 +53,6 @@ pub trait ValueObjTrait {
     }
 }
 
-pub type RefObject = Rc<RefCell<Box<dyn Object>>>;
 
 #[derive(Clone)]
 pub struct Str (pub String);

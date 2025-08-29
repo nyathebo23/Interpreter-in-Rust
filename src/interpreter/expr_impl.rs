@@ -59,8 +59,7 @@ impl Expression for CallExpr  {
 
 impl Expression for IdentifierExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object> {
-        let current_value = state_scope.get_variable(&self.ident_name);
-        if let Some(value) = current_value {
+        if let Some(value) = state_scope.get_variable(&self.ident_name) {
             match &self.value_to_assign {
                 Some(expr_value) => {
                     let val = expr_value.evaluate(state_scope);

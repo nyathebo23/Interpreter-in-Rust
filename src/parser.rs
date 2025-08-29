@@ -58,9 +58,6 @@ impl Parser<'_> {
         }
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
-            TokenType::THIS => Box::new(
-                IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
-            ),
             TokenType::IDENTIFIER => Box::new(
                 IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
             ),
