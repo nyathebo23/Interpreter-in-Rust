@@ -51,7 +51,7 @@ impl Node {
 
     pub fn end_class(&mut self)  {
         if let Some(parent) = &self.parent {
-            if parent.current_function == FunctionType::NONE {
+            if self.current_function == FunctionType::NONE {
                 *self = *parent.clone();
             }
         }

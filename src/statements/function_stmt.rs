@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
-
 use crate::compiler::Compiler;
 use crate::error_handler::{handle_error, ErrorType};
 use crate::function::Function;
