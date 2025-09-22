@@ -127,18 +127,19 @@ impl Class {
     }
 
     fn set_method_on_instance(instance: &mut ClassInstance, func_stmt: &FunctionDeclStatement) {
-        let instance_copy: Box<dyn Object> = Box::new(instance.clone());
         let mut func_copy = func_stmt.function_decl.clone();
         if func_stmt.extern_variables.iter().any(|ident| ident.value == "this") {
+            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
         }
         instance.set(&func_stmt.function_decl.name, Box::new(func_copy));
     }
 
     fn set_method_on_inherit_instance(&self, instance: &mut ClassInstance, parent_class: &Box<Class>, func_stmt: &FunctionDeclStatement) {
-        let instance_copy: Box<dyn Object> = Box::new(instance.clone());
+        
         let mut func_copy = func_stmt.function_decl.clone();
         if func_stmt.extern_variables.iter().any(|ident| ident.value == "this") {
+            let instance_copy: Box<dyn Object> = Box::new(instance.clone());
             func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
         }
         if func_stmt.extern_variables.iter().any(|ident| ident.value == "super") {
@@ -169,7 +170,7 @@ impl Class {
                         continue;
                     }
                     else {
-                        self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
+                        self.set_method_on_inherit_instance(instance, super_class, &func_stmt);
                         break;
                     }
                 }
