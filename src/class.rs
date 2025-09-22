@@ -173,8 +173,10 @@ impl Class {
                         parent_class = super_class.super_class.clone();
                         continue;
                     }
-                    self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
-                    break;
+                    else {
+                        self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
+                        break;
+                    }
                 }
             }
         }
