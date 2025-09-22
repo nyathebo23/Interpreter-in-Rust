@@ -37,15 +37,6 @@ impl Expression for CallExpr  {
         handle_error(&self.line, ErrorType::RuntimeError, format!("No Callable with name '{}'", identifier).as_str());
     }
 
-    fn contains_identifier(&self, ident: &String) -> bool {
-        for param in self.params.iter() {
-            if param.contains_identifier(ident) {
-                return true;
-            }
-        }
-        self.callable.contains_identifier(ident)
-    }
-
     fn get_line(&self) -> u32 {
         self.line
     }
@@ -71,15 +62,10 @@ impl Expression for IdentifierExpr {
         }
         handle_error(&self.line, ErrorType::RuntimeError, 
             format!("Undefined variable '{}'.", self.ident_name).as_str());
-        
     }
 
     fn value_from_class_instance(&self, instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         (self.ident_name.clone(), instance.get(&self.ident_name))
-    }
-
-    fn contains_identifier(&self, ident: &String) -> bool {
-        *ident == self.ident_name
     }
 
     fn get_line(&self) -> u32 {
@@ -94,10 +80,6 @@ impl Expression for IdentifierExpr {
 impl Expression for LiteralExpr {
     fn evaluate(&self, _state_scope: &mut BlockScopes) -> Box <dyn Object> {
         return self.value.dyn_clone();
-    }
-
-    fn contains_identifier(&self, _ident: &String) -> bool {
-        false
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
@@ -117,10 +99,6 @@ impl Expression for LiteralExpr {
 impl Expression for GroupExpr {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box <dyn Object> {
         return self.value.evaluate(state_scope);
-    }
-
-    fn contains_identifier(&self, ident: &String) -> bool {
-        self.value.contains_identifier(ident)
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
@@ -166,10 +144,6 @@ impl  Expression for UnaryExpr {
                 }
             }
         }
-    }
-
-    fn contains_identifier(&self, ident: &String) -> bool {
-        self.value.contains_identifier(ident)
     }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
@@ -261,10 +235,6 @@ impl  Expression for BinaryExpr {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
         
-    }
-
-    fn contains_identifier(&self, ident: &String) -> bool {
-        self.value1.contains_identifier(ident) || self.value1.contains_identifier(ident)
     }
 
     fn get_line(&self) -> u32 {

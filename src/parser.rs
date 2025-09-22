@@ -8,11 +8,14 @@ pub(crate) mod declarations;
 pub mod expressions;
 pub mod operators_decl;
 use crate::parser::expressions::*;
+use std::mem;
 
 pub struct Parser<'a> {
     pub tokens_list: &'a Vec<Token>,
     pub size: usize,
     pub current_index: usize, 
+    current_identifier: bool,
+    current_expr_identifiers: Vec<Identifier>,
     op_priority_list: Rc<OpChainPriority>,
 }
 
@@ -22,9 +25,16 @@ impl Parser<'_> {
             tokens_list: tokens,
             size: tokens.len(),
             current_index: index,
+            current_expr_identifiers: Vec::new(),
+            current_identifier: false,
             op_priority_list: operators_priority_list().into(),
         }
     }
+
+    pub fn get_current_expr_identifiers(&mut self) -> Vec<Identifier> {
+        mem::take(&mut self.current_expr_identifiers)
+    }
+
 
     fn get_expr_op_priority(&mut self, prec_expr: Box<dyn Expression>, operators_list: &OpChainPriority) -> Box<dyn Expression> {
         match operators_list {
@@ -58,9 +68,17 @@ impl Parser<'_> {
         }
         let token = &self.tokens_list[self.current_index];
         let expr: Box<dyn Expression>  =  match token.token_type {
-            TokenType::IDENTIFIER => Box::new(
-                IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
-            ),
+            TokenType::IDENTIFIER => {
+                let ident = token.lexeme.to_string();
+                if !self.current_identifier {
+                    let callable = self.tokens_list[self.current_index+1].token_type == TokenType::LEFTPAREN;
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, callable));
+                    self.current_identifier = true;
+                }
+                Box::new(
+                    IdentifierExpr::new(ident, None, token.line)
+                )
+            },
             TokenType::LEFTPAREN => {
                 self.next();
                 let expr = GroupExpr::new(self.expression(), token.line);
@@ -97,15 +115,25 @@ impl Parser<'_> {
             TokenType::MINUS => self.get_unary_expr(token, UnaryOperator::MINUS),
             TokenType::BANG => self.get_unary_expr(token, UnaryOperator::BANG),
             TokenType::THIS => {
+                let ident = token.lexeme.to_string();
+                if !self.current_identifier {
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, false));
+                    self.current_identifier = true;
+                }
                 let first_term_expr = Box::new(
-                    IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
+                    IdentifierExpr::new(ident, None, token.line)
                 ); 
                 self.next();
                 return self.assignment_expr(first_term_expr);
             },
             TokenType::SUPER => {
+                let ident = token.lexeme.to_string();
+                if !self.current_identifier {
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, false));
+                    self.current_identifier = true;
+                }
                 let first_term_expr = Box::new(
-                    IdentifierExpr::new(token.lexeme.to_string(), None, token.line)
+                    IdentifierExpr::new(ident, None, token.line)
                 ); 
                 self.next();
                 let next_token = self.current_token();
@@ -217,6 +245,7 @@ impl Parser<'_> {
     }
 
     pub fn expression(&mut self) -> Box<dyn Expression> {
+        self.current_identifier = false;
         let start_expr = self.non_binary_expr();
         let op_prior_list = self.op_priority_list.clone();
         let expr = self.get_expr_op_priority(start_expr, &op_prior_list);

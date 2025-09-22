@@ -7,6 +7,7 @@ use crate::error_handler::{handle_error, ErrorType};
 use crate::interpreter::block_scopes::BlockScopes;
 use crate::parser::declarations::{RefObject, Type};
 use crate::function::Function;
+use crate::parser::expressions::Identifier;
 use crate::parser::{declarations::Object, expressions::Expression};
 use crate::scanner::declarations::Token;
 mod simple_statement;
@@ -158,9 +159,10 @@ impl ReturnStatement  {
     }
 }
 
-
+#[derive(Clone)]
 pub struct FunctionDeclStatement {
-    function_decl: Function,
+    pub function_decl: Function,
+    pub extern_variables: Vec<Identifier>
 }
 
 
@@ -170,7 +172,7 @@ impl Statement for FunctionDeclStatement {
             name: self.function_decl.name.clone(),
             params_names: self.function_decl.params_names.clone(),
             statements: self.function_decl.statements.clone(),
-            extra_map: FunctionDeclStatement::get_outfunc_variables(&state)
+            extra_map: self.get_outfunc_variables(&state)
         };
         state.define_function(&self.function_decl.name.clone(), func_copy.clone());
         *current_stmt_ind += 1;
@@ -178,12 +180,19 @@ impl Statement for FunctionDeclStatement {
 }
 
 impl FunctionDeclStatement {
-    fn get_outfunc_variables(state: &BlockScopes) -> HashMap<String, RefObject> {
+    fn get_outfunc_variables(&self, state: &BlockScopes) -> HashMap<String, RefObject> {
         let mut result_map: HashMap<String, RefObject>  = HashMap::new();
-        for hashmap in &state.vars_nodes_map {
-            for (key, val) in hashmap {
-                result_map.insert(key.clone(), val.clone());
+
+        for identifier in &self.extern_variables {
+            for hashmap in state.vars_nodes_map.iter().rev() {
+                let val = hashmap.get(&identifier.value);
+                if let Some(value) = val {
+                    result_map.insert(identifier.value.to_string(), value.clone());
+                    break;
+                }
             }
+            handle_error(&identifier.line, ErrorType::RuntimeError, 
+            format!("Undefined variable '{}'.", identifier.value.as_str()).as_str());
         }
         result_map
     }
@@ -204,11 +213,15 @@ impl Statement for ClassDeclStatement {
                     let super_class = super_class_obj.as_class().unwrap();
                     for (funcname, func)  in &super_class.methods {
                         if !class.methods.contains_key(funcname) {
-                            class.methods.insert(funcname.to_string(), func.clone());
+                            //class.methods.insert(funcname.to_string(), func.clone());
+                            class.inherited_methods.insert(funcname.to_string(), func.clone());
                         }
                     }
                     if let None = class.constructor {
-                        class.constructor = super_class.constructor.clone();
+                        if let Some(initmethod) = &super_class.constructor {
+                            class.constructor = Some(initmethod.clone());
+                            class.inherited_methods.insert(initmethod.function_decl.name.to_string(), initmethod.clone());
+                        }
                     }
                     class.super_class = Some(Box::new(super_class.clone()));
                     state.define_class(&class.name, class.clone());

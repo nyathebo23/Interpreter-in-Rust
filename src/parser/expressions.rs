@@ -4,13 +4,24 @@ use crate::interpreter::block_scopes::BlockScopes;
 use crate::parser::declarations::*;
 use crate::parser::operators_decl::*;
 
+#[derive(Clone)]
+pub struct Identifier {
+    pub value: String,
+    pub callable: bool,
+    pub line: u32
+}
 
+impl Identifier {
+    pub fn new(value: String, line: u32, callable: bool) -> Identifier {
+        Identifier { value, callable, line }
+    }
+}
 pub trait Expression {
     fn evaluate(&self, state_scope: &mut BlockScopes) -> Box<dyn Object>;
-    fn contains_identifier(&self, ident: &String) -> bool;
     fn to_string(&self) -> String;
     fn get_line(&self) -> u32;
-    fn value_from_class_instance(&self, instance: &ClassInstance, state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>);
+    fn value_from_class_instance(&self, instance: &ClassInstance, 
+        state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>);
 }
 
 pub struct InstanceGetSetExpr {

@@ -1,8 +1,8 @@
 use std::{borrow::Cow, cell::RefCell, collections::HashMap, process, rc::Rc};
 
 use crate::error_handler::{handle_error, ErrorType};
-use crate::function::Function;
 use crate::interpreter::block_scopes::BlockScopes;
+use crate::statements::FunctionDeclStatement;
 use crate::{error_handler::RUNTIME_ERROR_CODE};
 use crate::parser::expressions::{Expression, InstanceGetSetExpr};
 use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
@@ -10,8 +10,9 @@ use crate::parser::declarations::{Object, RefObject, Type, ValueObjTrait};
 #[derive(Clone)]
 pub struct Class {
     pub name: String,
-    pub methods: HashMap<String, Function>,
-    pub constructor: Option<Function>,
+    pub methods: HashMap<String, FunctionDeclStatement>,
+    pub inherited_methods: HashMap<String, FunctionDeclStatement>,
+    pub constructor: Option<FunctionDeclStatement>,
     pub super_class: Option<Box<Class>>
 }
 
@@ -36,6 +37,7 @@ impl Object for Class  {
         Box::new(Class{
             name: self.name.clone(),
             methods: self.methods.clone(),
+            inherited_methods: self.inherited_methods.clone(),
             constructor: self.constructor.clone(),
             super_class: self.super_class.clone()
         })
@@ -112,6 +114,7 @@ impl Class {
             attributes: Rc::new(RefCell::new(HashMap::new())) 
         };
         let current_class = Box::new(self.clone());
+
         self.set_methods_on_instance(&mut instance, &current_class);
         if let Some(_) = &self.constructor {
             let func_obj = instance.get(&String::from("init")).unwrap();
@@ -123,20 +126,31 @@ impl Class {
         instance
     }
 
-    fn set_method_on_instance(instance: &mut ClassInstance, func_name: &String, func: &Function) {
+    fn set_method_on_instance(instance: &mut ClassInstance, func_stmt: &FunctionDeclStatement) {
         let instance_copy: Box<dyn Object> = Box::new(instance.clone());
-        let mut func_copy = func.clone();
-        func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
-        instance.set(func_name, Box::new(func_copy));
+        let mut func_copy = func_stmt.function_decl.clone();
+        if func_stmt.extern_variables.iter().any(|ident| ident.value == "this") {
+            func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
+        }
+        instance.set(&func_stmt.function_decl.name, Box::new(func_copy));
     }
 
-    fn set_method_on_inherit_instance(instance: &mut ClassInstance, parent: &ClassInstance, func_name: &String, func: &Function) {
+    fn set_method_on_inherit_instance(&self, instance: &mut ClassInstance, parent_class: &Box<Class>, func_stmt: &FunctionDeclStatement) {
         let instance_copy: Box<dyn Object> = Box::new(instance.clone());
-        let mut func_copy = func.clone();
-        func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
-        let parent_obj: Box<dyn Object> = Box::new(parent.clone());
-        func_copy.extra_map.insert(String::from("super"), Rc::new(RefCell::new(parent_obj)));
-        instance.set(func_name, Box::new(func_copy));
+        let mut func_copy = func_stmt.function_decl.clone();
+        if func_stmt.extern_variables.iter().any(|ident| ident.value == "this") {
+            func_copy.extra_map.insert(String::from("this"), Rc::new(RefCell::new(instance_copy)));
+        }
+        if func_stmt.extern_variables.iter().any(|ident| ident.value == "super") {
+            let mut parent_instance = ClassInstance {
+                class: Rc::new(*parent_class.clone()),
+                attributes: Rc::new(RefCell::new(HashMap::new())) 
+            };   
+            self.set_methods_on_instance(&mut parent_instance, parent_class);
+            let parent_obj: Box<dyn Object> = Box::new(parent_instance.clone());
+            func_copy.extra_map.insert(String::from("super"), Rc::new(RefCell::new(parent_obj)));
+        }
+        instance.set(&func_stmt.function_decl.name, Box::new(func_copy));
     }
 
     fn set_methods_on_instance(&self, instance: &mut ClassInstance, class: &Box<Class>) {
@@ -146,20 +160,30 @@ impl Class {
                 attributes: Rc::new(RefCell::new(HashMap::new())) 
             };   
             self.set_methods_on_instance(&mut parent_instance, superclass);
-            for (func_name, func) in class.methods.iter() {
-                Class::set_method_on_inherit_instance(instance, &parent_instance, func_name, func);
+            for (_, func_stmt) in class.methods.iter() {
+                self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
             }
-            if let Some(init_method) = &class.constructor {
-                Class::set_method_on_inherit_instance(instance, &parent_instance, 
-                    &init_method.name.to_string(), init_method);
+            if let Some(init_method_stmt) = &class.constructor {
+                self.set_method_on_inherit_instance(instance, superclass,&init_method_stmt);
+            }
+            for (funcname, func_stmt) in class.inherited_methods.iter() {
+                let mut parent_class = Some(superclass.clone());
+                while let Some(super_class) = &parent_class {
+                    if super_class.inherited_methods.contains_key(funcname) {
+                        parent_class = super_class.super_class.clone();
+                        continue;
+                    }
+                    self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
+                    break;
+                }
             }
         }
         else {
-            for (func_name, func) in class.methods.iter() {
-                Class::set_method_on_instance(instance, func_name, func);
+            for (_, func_stmt) in class.methods.iter() {
+                Class::set_method_on_instance(instance,  &func_stmt);
             }
-            if let Some(init_method) = &class.constructor {
-                Class::set_method_on_instance(instance, &init_method.name.to_string(), init_method);
+            if let Some(init_method_stmt) = &class.constructor {
+                Class::set_method_on_instance(instance, &init_method_stmt);
             }
         }
     }
@@ -191,13 +215,6 @@ impl Expression for InstanceGetSetExpr {
         } 
     }
 
-    fn contains_identifier(&self, ident: &String) -> bool {
-        let contain_ident = self.instance.contains_identifier(ident) || self.property.contains_identifier(ident);
-        match &self.value_to_assign {
-            Some(val) => contain_ident || val.contains_identifier(ident),
-            None => contain_ident
-        }
-    }
 
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         process::exit(RUNTIME_ERROR_CODE)

@@ -3,10 +3,9 @@ use std::collections::HashMap;
 use crate::class::Class;
 use crate::compiler::Compiler;
 use crate::error_handler::{handle_error, ErrorType};
-use crate::function::Function;
 use crate::scanner::declarations::TokenType;
 use crate::statements::function_stmt::func_decl;
-use crate::statements::ClassDeclStatement;
+use crate::statements::{ClassDeclStatement, FunctionDeclStatement};
 
 
 pub fn class_decl_statement(compiler: &mut Compiler) -> ClassDeclStatement {
@@ -14,7 +13,7 @@ pub fn class_decl_statement(compiler: &mut Compiler) -> ClassDeclStatement {
     let class_name = compiler.parser.current_token().lexeme.to_string();
     compiler.advance();        
     let mut super_class_name = None;
-    compiler.environment.start_class();
+    
     if compiler.parser.current_token().token_type == TokenType::LESS {
         compiler.advance();
         let token = compiler.parser.current_token().clone();
@@ -24,23 +23,34 @@ pub fn class_decl_statement(compiler: &mut Compiler) -> ClassDeclStatement {
                 format!(" Error at {}: A class can't inherit from itself", class_name).as_str());
         }
         super_class_name = Some(token);
-        compiler.environment.start_child_class();
+        compiler.environment.start_child_class(&class_name);
+    }
+    else {
+        compiler.environment.start_class(&class_name);
     }
     compiler.parser.check_token(TokenType::LEFTBRACE, "{");
 
     let mut methods = HashMap::new();
-    let mut constructor: Option<Function> = None;  
+    let mut constructor: Option<FunctionDeclStatement> = None;  
     while compiler.parser.current_token().token_type != TokenType::RIGHTBRACE {
         let funcname = compiler.parser.current_token().lexeme.to_string();
         if funcname == "init" {
             compiler.environment.start_init_class_func();
-            constructor = Some(func_decl(compiler));
-            compiler.environment.end_init_class_func();
+            let func = func_decl(compiler, funcname.clone());
+            let func_declaration = FunctionDeclStatement {
+                function_decl: func,
+                extern_variables: compiler.environment.end_class_func()
+            };
+            constructor = Some(func_declaration);
             continue;
         }
-        compiler.environment.start_function();
-        methods.insert(funcname, func_decl(compiler,));
-        compiler.environment.end_function();
+        compiler.environment.start_class_func();
+        let func = func_decl(compiler, funcname.clone());
+        let func_declaration = FunctionDeclStatement {
+            function_decl: func,
+            extern_variables: compiler.environment.end_class_func()
+        };
+        methods.insert(funcname, func_declaration);
 
     }
     
@@ -50,6 +60,7 @@ pub fn class_decl_statement(compiler: &mut Compiler) -> ClassDeclStatement {
         name: class_name,
         methods,
         constructor,
+        inherited_methods: HashMap::new(),
         super_class: None
     };
     ClassDeclStatement {

@@ -1,6 +1,6 @@
 
 use crate::compiler::Compiler;
-use crate::error_handler::{check_class_keywords_usage, check_return_validity, check_var_redeclaration, check_var_selfinit, handle_error, ErrorType};
+use crate::error_handler::{handle_error, ErrorType};
 use crate::statements::classes_decl_stmt::class_decl_statement;
 use crate::statements::function_stmt::{func_decl_statement, return_statement};
 use crate::statements::simple_statement::{expr_statement, print_statement, var_statement};
@@ -10,23 +10,19 @@ use crate::parser::{declarations::Bool, expressions::{Expression, LiteralExpr}};
 
 pub fn block_scope(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
-    let mut var_stmts_ident: Vec<String> = Vec::new(); 
+    compiler.environment.start_block();
     stmts.push(Box::new(StartBlockStatement{}));
     compiler.advance();
     while compiler.not_reach_end() {
         let token = compiler.parser.current_token();
-        let line = token.line;
         match token.token_type {
             TokenType::VAR => {
-                let var_stmt = var_statement(compiler);
-                check_var_redeclaration(&var_stmts_ident, &var_stmt.name, &line);
-                check_var_selfinit(&var_stmt.expression, &var_stmt.name, &line);
-                var_stmts_ident.push(var_stmt.name.clone());
-                stmts.push(Box::new(var_stmt));
+                stmts.push(Box::new(var_statement(compiler)));
             },
             TokenType::RIGHTBRACE => {
                 compiler.advance();
                 stmts.push(Box::new(EndBlockStatement{}));
+                compiler.environment.end_block();
                 return stmts;
             },
             TokenType::FUN => {
@@ -92,7 +88,6 @@ pub fn block_statements(compiler: &mut Compiler, tokentype: TokenType) -> Vec<Bo
             stmts.push(Box::new(print_statement(compiler)));
         },
         TokenType::RETURN => {
-            check_return_validity(&compiler.parser.current_token().line, &compiler.environment);
             stmts.push(Box::new(return_statement(compiler)));
         },
         _ => {
@@ -105,7 +100,7 @@ pub fn block_statements(compiler: &mut Compiler, tokentype: TokenType) -> Vec<Bo
 pub fn if_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     compiler.advance();
     let cond_expr = compiler.parser.expression();
-    check_class_keywords_usage(&cond_expr, &compiler.environment);
+    compiler.environment.check_identifiers(compiler.parser.get_current_expr_identifiers(), cond_expr.get_line());
     let mut if_body = statement_condition(compiler);
 
     let size_ifblock = if_body.len() + 2;
@@ -133,7 +128,8 @@ pub fn if_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
         if new_token.token_type == TokenType::IF {
             compiler.advance();
             let sub_if_cond = compiler.parser.expression();
-            check_class_keywords_usage(&sub_if_cond, &compiler.environment);
+            compiler.environment.check_identifiers(compiler.parser.get_current_expr_identifiers(), sub_if_cond.get_line());
+
             let sub_if_body = statement_condition(compiler);
             let size_block = sub_if_body.len() + 2;
             stmt_count += size_block;
@@ -173,7 +169,8 @@ pub fn if_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
 pub fn while_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     compiler.advance();
     let cond_expr = compiler.parser.expression();
-    check_class_keywords_usage(&cond_expr, &compiler.environment);
+    compiler.environment.check_identifiers(compiler.parser.get_current_expr_identifiers(), cond_expr.get_line());
+
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     let mut while_body = statement_condition(compiler);
 
@@ -203,14 +200,17 @@ pub fn for_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     let mut condition: Box<dyn Expression> = Box::new(LiteralExpr::new(Box::new(Bool(true)), line)); 
     if compiler.parser.current_token().token_type != TokenType::SEMICOLON {
         condition = compiler.parser.expression();
+        compiler.environment.check_identifiers(compiler.parser.get_current_expr_identifiers(), condition.get_line());
+
     }
-    check_class_keywords_usage(&condition, &compiler.environment);
     let mut body_stmts: Vec<Box<dyn Statement>> = Vec::new();
 
     compiler.parser.check_token(TokenType::SEMICOLON, ";");
     let mut last_instruction: Option<Box<dyn Expression>> = None;
     if compiler.parser.current_token().token_type != TokenType::RIGHTPAREN {
-        last_instruction = Some(compiler.parser.expression());
+        let last_expr = compiler.parser.expression();
+        compiler.environment.check_identifiers(compiler.parser.get_current_expr_identifiers(), last_expr.get_line());
+        last_instruction = Some(last_expr);
     }
     compiler.parser.check_token(TokenType::RIGHTPAREN, ")");
     let mut for_body = statement_condition(compiler);
