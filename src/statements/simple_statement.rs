@@ -36,6 +36,8 @@ pub fn var_statement(compiler: &mut Compiler) -> VarStatement {
         };
     }
     else {
+        compiler.environment.declaration(&identifier_str, &identifier_line, 
+            Vec::new(), identifier_line);
         compiler.parser.check_token(TokenType::SEMICOLON, ";"); 
         return VarStatement {
             name: identifier_str,
