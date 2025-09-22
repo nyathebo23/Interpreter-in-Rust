@@ -70,7 +70,7 @@ impl Parser<'_> {
         let expr: Box<dyn Expression>  =  match token.token_type {
             TokenType::IDENTIFIER => {
                 let ident = token.lexeme.to_string();
-                if !self.current_identifier {
+                if !self.current_identifier && self.current_index + 1 < self.size {
                     let callable = self.tokens_list[self.current_index+1].token_type == TokenType::LEFTPAREN;
                     self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, callable));
                     self.current_identifier = true;
