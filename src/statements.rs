@@ -198,10 +198,19 @@ impl Statement for ClassDeclStatement {
     fn run(&self, state: &mut BlockScopes, current_stmt_ind: &mut usize) {
         if let Some(supclass_token) = &self.super_class_token {
             let super_class_name = supclass_token.lexeme.to_string();
-            if let Some(super_class) = state.get_variable(&super_class_name) {
-                if super_class.get_type() == Type::CLASS {
+            if let Some(super_class_obj) = state.get_variable(&super_class_name) {
+                if super_class_obj.get_type() == Type::CLASS {
                     let mut class = self.class.clone();
-                    class.super_class = Some(Box::new(super_class.as_class().unwrap().clone()));
+                    let super_class = super_class_obj.as_class().unwrap();
+                    for (funcname, func)  in &super_class.methods {
+                        if !class.methods.contains_key(funcname) {
+                            class.methods.insert(funcname.to_string(), func.clone());
+                        }
+                    }
+                    if let None = class.constructor {
+                        class.constructor = super_class.constructor.clone();
+                    }
+                    class.super_class = Some(Box::new(super_class.clone()));
                     state.define_class(&class.name, class.clone());
                     *current_stmt_ind += 1;
                     return;

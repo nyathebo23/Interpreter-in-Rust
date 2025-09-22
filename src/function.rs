@@ -109,8 +109,7 @@ impl Function {
 }
 
 fn return_instance_on_func(out_func_state: &mut BlockScopes, depth: usize) -> Box<dyn Object> {
-    let this = String::from("this");
-    if let Some(instance) = out_func_state.get_variable_from(&this, depth) {
+    if let Some(instance) = out_func_state.get_variable_from(&String::from("this"), depth) {
         return instance;
     }
     return Box::new(NIL)

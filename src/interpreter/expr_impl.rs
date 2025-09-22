@@ -22,10 +22,8 @@ impl Expression for CallExpr  {
         }
         else {
             handle_error(&self.line, ErrorType::RuntimeError, 
-                "Can only call functions and classes.");
-             
+                "Can only call functions and classes.");    
         }
-        
     }
 
     fn value_from_class_instance(&self, instance: &ClassInstance, state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
@@ -105,7 +103,6 @@ impl Expression for LiteralExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        
     }
 
     fn get_line(&self) -> u32 {
@@ -129,7 +126,6 @@ impl Expression for GroupExpr {
     fn value_from_class_instance(&self, _instance: &ClassInstance, _state_scope: &mut BlockScopes) -> (String, Option<Box<dyn Object>>) {
         handle_error(&self.line, ErrorType::RuntimeError, 
             "Can only access property on class instance");
-        
     }
 
     fn get_line(&self) -> u32 {

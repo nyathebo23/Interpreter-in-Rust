@@ -228,12 +228,12 @@ impl Parser<'_> {
     }
 
     pub fn check_token(&mut self, tokentype: TokenType, lexeme: &str) {
-    let token = self.current_token();
-    if token.token_type != tokentype {
-        handle_error(&token.line, ErrorType::SyntacticError, 
-            format!("Error at '{}': Expect {}", token.lexeme, lexeme).as_str());
-    }  
-    self.next();
-}
+        let token = self.current_token();
+        if token.token_type != tokentype {
+            handle_error(&token.line, ErrorType::SyntacticError, 
+                format!("Error at '{}': Expect {}", token.lexeme, lexeme).as_str());
+        }  
+        self.next();
+    }
     
 }
