@@ -147,6 +147,7 @@ impl Class {
                 class: Rc::new(*parent_class.clone()),
                 attributes: Rc::new(RefCell::new(HashMap::new())) 
             };      
+
             self.set_methods_on_instance(&mut parent_instance, parent_class);
             let parent_obj: Box<dyn Object> = Box::new(parent_instance.clone());
             func_copy.extra_map.insert(String::from("super"), Rc::new(RefCell::new(parent_obj)));
@@ -174,6 +175,8 @@ impl Class {
                             self.set_method_on_inherit_instance(instance, high_class, &func_stmt);
                             break;
                         }
+                        self.set_method_on_inherit_instance(instance, super_class, &func_stmt);
+                        break;
                     }
                 }
             }

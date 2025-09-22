@@ -183,19 +183,15 @@ impl FunctionDeclStatement {
     fn get_outfunc_variables(&self, state: &BlockScopes) -> HashMap<String, RefObject> {
         let mut result_map: HashMap<String, RefObject>  = HashMap::new();
 
-        for identifier in &self.extern_variables {
-            if identifier.value == "this" || identifier.value == "super" {
-                continue;
-            }
+        'outer: for identifier in &self.extern_variables {
             for hashmap in state.vars_nodes_map.iter().rev() {
-                let val = hashmap.get(&identifier.value);
-                if let Some(value) = val {
+                if let Some(value) = hashmap.get(&identifier.value) {
                     result_map.insert(identifier.value.to_string(), value.clone());
-                    break;
+                    continue 'outer;
                 }
             }
             handle_error(&identifier.line, ErrorType::RuntimeError, 
-            format!("Undefined variable '{}'.", identifier.value.as_str()).as_str());
+            format!("Undefined variable '{}' .", identifier.value.as_str()).as_str());
         }
         result_map
     }
@@ -216,7 +212,7 @@ impl Statement for ClassDeclStatement {
                     let super_class = super_class_obj.as_class().unwrap();
                     for (funcname, func)  in &super_class.methods {
                         if !class.methods.contains_key(funcname) {
-                            class.methods.insert(funcname.to_string(), func.clone());
+                            //class.methods.insert(funcname.to_string(), func.clone());
                             class.inherited_methods.insert(funcname.to_string(), func.clone());
                         }
                     }

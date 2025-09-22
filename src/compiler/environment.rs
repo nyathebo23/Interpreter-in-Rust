@@ -194,7 +194,17 @@ impl Environment {
     }
 
     pub fn end_function(&mut self) -> Vec<Identifier> {
-        self.nodes_tree.end_func()
+        let idents = self.nodes_tree.end_func();
+        if self.nodes_tree.current_class == ClassType::NONE {
+            return idents;
+        }
+        for item in &idents {
+            if (item.value == "this" || item.value == "super") && 
+                !self.nodes_tree.out_identifiers.iter().any(|ident| ident.value == item.value) {
+                self.nodes_tree.out_identifiers.push(item.clone());
+            }
+        }
+        idents
     }
 
     pub fn start_class(&mut self, classname: &String) {
