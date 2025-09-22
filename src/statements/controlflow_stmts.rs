@@ -185,6 +185,7 @@ pub fn for_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     compiler.advance();
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     stmts.push(Box::new(StartBlockStatement{}));
+    compiler.environment.start_block();
     compiler.parser.check_token(TokenType::LEFTPAREN, "(");
     let token = compiler.parser.current_token();
     let line = token.line;
@@ -222,6 +223,7 @@ pub fn for_statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     body_stmts.push(back_to(body_stmts.len() + 1));
     stmts.push(jump(condition, body_stmts.len() + 1));
     stmts.append(&mut body_stmts);
+    compiler.environment.end_block();
     stmts.push(Box::new(EndBlockStatement{}));
 
     stmts
