@@ -107,6 +107,7 @@ impl Parser<'_> {
     
     fn non_binary_expr(&mut self) -> Box<dyn Expression> 
     {
+        self.current_identifier = false;
         if self.current_index >= self.size {
             self.exit_error(&self.tokens_list[self.current_index].line, "Error: Expect expression.");
         }
@@ -245,7 +246,6 @@ impl Parser<'_> {
     }
 
     pub fn expression(&mut self) -> Box<dyn Expression> {
-        self.current_identifier = false;
         let start_expr = self.non_binary_expr();
         let op_prior_list = self.op_priority_list.clone();
         let expr = self.get_expr_op_priority(start_expr, &op_prior_list);
