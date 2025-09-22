@@ -56,7 +56,7 @@ pub fn statement(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
 fn statement_condition(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
     let token = compiler.parser.current_token();
     match token.token_type {
-        TokenType::VAR | TokenType::FUN => {
+        TokenType::VAR | TokenType::FUN | TokenType::CLASS => {
             handle_error(&token.line, ErrorType::SyntacticError, "Error: Expect expression.");
         },
         _ => block_statements(compiler, token.token_type)
@@ -66,9 +66,6 @@ fn statement_condition(compiler: &mut Compiler) -> Vec<Box<dyn Statement>> {
 pub fn block_statements(compiler: &mut Compiler, tokentype: TokenType) -> Vec<Box<dyn Statement>> {
     let mut stmts: Vec<Box<dyn Statement>> = Vec::new();
     match tokentype {
-        TokenType::CLASS => {
-            stmts.push(Box::new(class_decl_statement(compiler)));
-        },
         TokenType::IDENTIFIER => {
             stmts.push(Box::new(expr_statement(compiler)));
         },
@@ -89,6 +86,9 @@ pub fn block_statements(compiler: &mut Compiler, tokentype: TokenType) -> Vec<Bo
         },
         TokenType::RETURN => {
             stmts.push(Box::new(return_statement(compiler)));
+        },
+        TokenType::CLASS => {
+            stmts.push(Box::new(class_decl_statement(compiler)));
         },
         _ => {
             stmts.push(Box::new(expr_statement(compiler)));
