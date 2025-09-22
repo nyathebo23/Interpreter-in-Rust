@@ -184,6 +184,9 @@ impl FunctionDeclStatement {
         let mut result_map: HashMap<String, RefObject>  = HashMap::new();
 
         for identifier in &self.extern_variables {
+            if identifier.value == "this" || identifier.value == "super" {
+                continue;
+            }
             for hashmap in state.vars_nodes_map.iter().rev() {
                 let val = hashmap.get(&identifier.value);
                 if let Some(value) = val {
