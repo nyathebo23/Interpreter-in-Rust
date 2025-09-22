@@ -190,8 +190,8 @@ impl FunctionDeclStatement {
                     continue 'outer;
                 }
             }
-            handle_error(&identifier.line, ErrorType::RuntimeError, 
-            format!("Undefined variable '{}' .", identifier.value.as_str()).as_str());
+            // handle_error(&identifier.line, ErrorType::RuntimeError, 
+            // format!("Undefined variable '{}' .", identifier.value.as_str()).as_str());
         }
         result_map
     }
