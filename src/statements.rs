@@ -213,7 +213,7 @@ impl Statement for ClassDeclStatement {
                     let super_class = super_class_obj.as_class().unwrap();
                     for (funcname, func)  in &super_class.methods {
                         if !class.methods.contains_key(funcname) {
-                            //class.methods.insert(funcname.to_string(), func.clone());
+                            class.methods.insert(funcname.to_string(), func.clone());
                             class.inherited_methods.insert(funcname.to_string(), func.clone());
                         }
                     }

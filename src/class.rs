@@ -155,11 +155,6 @@ impl Class {
 
     fn set_methods_on_instance(&self, instance: &mut ClassInstance, class: &Box<Class>) {
         if let Some(superclass) = &class.super_class {
-            let mut parent_instance = ClassInstance {
-                class: Rc::new(*superclass.clone()),
-                attributes: Rc::new(RefCell::new(HashMap::new())) 
-            };   
-            self.set_methods_on_instance(&mut parent_instance, superclass);
             for (_, func_stmt) in class.methods.iter() {
                 self.set_method_on_inherit_instance(instance, superclass, &func_stmt);
             }
