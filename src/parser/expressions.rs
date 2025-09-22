@@ -7,13 +7,13 @@ use crate::parser::operators_decl::*;
 #[derive(Clone)]
 pub struct Identifier {
     pub value: String,
-    pub callable: bool,
+    pub modified: bool,
     pub line: u32
 }
 
 impl Identifier {
-    pub fn new(value: String, line: u32, callable: bool) -> Identifier {
-        Identifier { value, callable, line }
+    pub fn new(value: String, line: u32, modified: bool) -> Identifier {
+        Identifier { value, modified, line }
     }
 }
 pub trait Expression {
