@@ -175,6 +175,8 @@ impl Class {
                             self.set_method_on_inherit_instance(instance, high_class, &func_stmt);
                             break;
                         }
+                        Class::set_method_on_instance(instance, &func_stmt);
+                        break;
                     }
                 }
             }

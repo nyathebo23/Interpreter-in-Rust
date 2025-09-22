@@ -156,7 +156,7 @@ impl Parser<'_> {
             return simple_expr
         }
         let ident_str = token.lexeme.to_string();
-
+        
         let mut next_token = &self.tokens_list[self.current_index];
         if next_token.token_type == TokenType::EQUAL {
             self.next();
