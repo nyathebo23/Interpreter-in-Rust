@@ -144,7 +144,7 @@ impl Environment {
                 }
             }
             else {
-                if !self.nodes_tree.declarations.contains(&ident_str) && ident.modified {
+                if !self.nodes_tree.declarations.contains(&ident_str) {
                     self.nodes_tree.out_identifiers.push(ident.clone());
                 }
             }

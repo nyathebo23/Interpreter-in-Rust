@@ -70,9 +70,8 @@ impl Parser<'_> {
         let expr: Box<dyn Expression>  =  match token.token_type {
             TokenType::IDENTIFIER => {
                 let ident = token.lexeme.to_string();
-                if !self.current_identifier && self.current_index + 1 < self.size  {
-                    let editable = self.tokens_list[self.current_index + 1].token_type == TokenType::LEFTPAREN;
-                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, editable));
+                if !self.current_identifier {
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line));
                     self.current_identifier = true;
                 }
                 Box::new(
@@ -118,7 +117,7 @@ impl Parser<'_> {
             TokenType::THIS => {
                 let ident = token.lexeme.to_string();
                 if !self.current_identifier {
-                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, false));
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line));
                     self.current_identifier = true;
                 }
                 let first_term_expr = Box::new(
@@ -130,7 +129,7 @@ impl Parser<'_> {
             TokenType::SUPER => {
                 let ident = token.lexeme.to_string();
                 if !self.current_identifier {
-                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line, false));
+                    self.current_expr_identifiers.push(Identifier::new(ident.clone(), token.line));
                     self.current_identifier = true;
                 }
                 let first_term_expr = Box::new(
@@ -161,9 +160,6 @@ impl Parser<'_> {
         let mut next_token = &self.tokens_list[self.current_index];
         if next_token.token_type == TokenType::EQUAL {
             self.next();
-            if let Some(last_identifier) = self.current_expr_identifiers.last_mut() {
-                last_identifier.modified = true;
-            }
             let expr = self.expression();
             return Box::new(IdentifierExpr::new(ident_str, Some(expr), next_token.line));
         }
@@ -180,9 +176,6 @@ impl Parser<'_> {
             if next_token.token_type != TokenType::DOT {
                 if next_token.token_type == TokenType::EQUAL {
                     self.next();
-                    if let Some(last_identifier) = self.current_expr_identifiers.last_mut() {
-                        last_identifier.modified = true;
-                    }
                     let expr = self.expression();
                     get_set_expr_temp.value_to_assign = Some(expr);
                     return Box::new(get_set_expr_temp);
